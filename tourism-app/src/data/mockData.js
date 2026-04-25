@@ -1,0 +1,271 @@
+// ============================================================
+// MOCK DATA — Full 12 Countries Edition
+// ============================================================
+
+export const trips = [
+  {
+    id: 1,
+    title: "Magical Maldives Escape",
+    country: "Maldives",
+    price: 2499,
+    duration: "7 Days / 6 Nights",
+    rating: 4.9,
+    reviewCount: 128,
+    image: "/images/maldives.jpg",
+    description: "Experience paradise in the crystal-clear waters of the Maldives. Stay in an overwater bungalow and enjoy world-class snorkeling.",
+    travelType: "Beach",
+    availableDates: ["2026-04-10", "2026-05-05"],
+    hotel: { name: "Maldives Pearl Resort", stars: 5, location: "North Malé Atoll" },
+    flight: { airline: "Emirates", departure: "Cairo", arrival: "Malé", duration: "6h 30m" },
+    includes: ["Flights", "Overwater bungalow", "All meals"]
+  },
+  {
+    id: 2,
+    title: "Paris Romance Journey",
+    country: "France",
+    price: 1899,
+    duration: "5 Days / 4 Nights",
+    rating: 4.8,
+    reviewCount: 214,
+    image: "/images/paris.jpg",
+    description: "Discover the City of Light with its iconic Eiffel Tower, world-class cuisine, and romantic Seine River cruises.",
+    travelType: "Cultural",
+    availableDates: ["2026-03-20", "2026-04-15"],
+    hotel: { name: "Le Grand Paris Hotel", stars: 5, location: "Champs-Élysées" },
+    flight: { airline: "Air France", departure: "Cairo", arrival: "Paris", duration: "5h 15m" },
+    includes: ["Flights", "5-star hotel", "Eiffel Tower tour"]
+  },
+  {
+    id: 3,
+    title: "Bali Spiritual Retreat",
+    country: "Indonesia",
+    price: 1299,
+    duration: "8 Days / 7 Nights",
+    rating: 4.7,
+    reviewCount: 189,
+    image: "/images/baliiii.jpg",
+    description: "Immerse yourself in Bali's spiritual culture, explore stunning rice terraces, and rejuvenate with traditional spa treatments.",
+    travelType: "Adventure",
+    availableDates: ["2026-04-01", "2026-05-15"],
+    hotel: { name: "Ubud Jungle Resort", stars: 4, location: "Ubud, Bali" },
+    flight: { airline: "Qatar Airways", departure: "Cairo", arrival: "Bali", duration: "11h 40m" },
+    includes: ["Flights", "Jungle villa", "Yoga classes"]
+  },
+  {
+    id: 4,
+    title: "Istanbul City of Two Continents",
+    country: "Turkey",
+    price: 850,
+    duration: "5 Days / 4 Nights",
+    rating: 4.8,
+    reviewCount: 412,
+    image: "/images/istanbul.jpg",
+    description: "Where East meets West. Explore the Blue Mosque, Hagia Sophia, and the vibrant Grand Bazaar.",
+    travelType: "Cultural",
+    availableDates: ["2026-04-10", "2026-06-01"],
+    hotel: { name: "Istanbul Heritage Hotel", stars: 5, location: "Sultanahmet" },
+    flight: { airline: "Turkish Airlines", departure: "Cairo", arrival: "Istanbul", duration: "2h 10m" },
+    includes: ["Flights", "Luxury Hotel", "Bosphorus Cruise"]
+  },
+  {
+    id: 5,
+    title: "Pyramids & Nile Luxury",
+    country: "Egypt",
+    price: 750,
+    duration: "4 Days / 3 Nights",
+    rating: 4.9,
+    reviewCount: 560,
+    image: "/images/eqyptt.jpg",
+    description: "Witness the last of the ancient wonders. A luxurious stay overlooking the Great Pyramids and the Sphinx.",
+    travelType: "Cultural",
+    availableDates: ["2026-03-01", "2026-10-15"],
+    hotel: { name: "Marriott Mena House", stars: 5, location: "Giza" },
+    flight: { airline: "EgyptAir", departure: "Dubai", arrival: "Cairo", duration: "3h 30m" },
+    includes: ["Airport transfer", "Pyramids tour", "Luxury breakfast"]
+  },
+  {
+    id: 6,
+    title: "Swiss Alps Winter Adventure",
+    country: "Switzerland",
+    price: 2800,
+    duration: "6 Days / 5 Nights",
+    rating: 4.9,
+    reviewCount: 145,
+    image: "/images/swiss.jpg",
+    description: "Breathtaking mountain views and pristine lakes. Perfect for hiking in summer or skiing in winter.",
+    travelType: "Adventure",
+    availableDates: ["2026-12-15", "2026-01-20"],
+    hotel: { name: "Alpine Grand Hotel", stars: 5, location: "Zermatt" },
+    flight: { airline: "Swiss Air", departure: "Cairo", arrival: "Zurich", duration: "4h 20m" },
+    includes: ["Flights", "Ski Pass", "Mountain Train tickets"]
+  },
+  {
+    id: 7,
+    title: "Bangkok & Phuket Combo",
+    country: "Thailand",
+    price: 1100,
+    duration: "9 Days / 8 Nights",
+    rating: 4.7,
+    reviewCount: 320,
+    image: "/images/bankok.avif",    description: "Experience the vibrant street life of Bangkok and the tropical white-sand beaches of Phuket.",
+    travelType: "Beach",
+    availableDates: ["2026-05-10", "2026-11-05"],
+    hotel: { name: "Ocean View Phuket", stars: 4, location: "Patong Beach" },
+    flight: { airline: "Thai Airways", departure: "Cairo", arrival: "Bangkok", duration: "9h 30m" },
+    includes: ["Internal flights", "Resort stay", "Island hopping"]
+  },
+  {
+    id: 8,
+    title: "Kuala Lumpur Highlights",
+    country: "Malaysia",
+    price: 950,
+    duration: "7 Days / 6 Nights",
+    rating: 4.6,
+    reviewCount: 210,
+    image: "/images/KualaLumpur.jpg.jpg",    description: "Marvel at the Petronas Twin Towers, explore Batu Caves, and enjoy diverse Malaysian street food.",
+    travelType: "Cultural",
+    availableDates: ["2026-06-15", "2026-09-10"],
+    hotel: { name: "Skyline Suites", stars: 5, location: "KLCC" },
+    flight: { airline: "Malaysia Airlines", departure: "Cairo", arrival: "Kuala Lumpur", duration: "10h 0m" },
+    includes: ["City tour", "Luxury hotel", "Batu Caves visit"]
+  },
+  {
+    id: 9,
+    title: "Dubai Luxury Experience",
+    country: "United Arab Emirates",
+    price: 1600,
+    duration: "5 Days / 4 Nights",
+    rating: 4.9,
+    reviewCount: 680,
+    image: "/images/dubai.jpg",
+    description: "Visit the city of gold. Burj Khalifa, desert safaris, and some of the world's best shopping malls.",
+    travelType: "Luxury",
+    availableDates: ["2026-04-05", "2026-12-25"],
+    hotel: { name: "Address Downtown", stars: 5, location: "Dubai" },
+    flight: { airline: "Emirates", departure: "Cairo", arrival: "Dubai", duration: "3h 15m" },
+    includes: ["Burj Khalifa tickets", "Desert Safari", "Private chauffeur"]
+  },
+  {
+    id: 10,
+    title: "Umrah Sacred Journey",
+    country: "Saudi Arabia",
+    price: 1500,
+    duration: "10 Days / 9 Nights",
+    rating: 5.0,
+    reviewCount: 850,
+    image: "/images/umrah.jpg.png",
+    description: "A spiritual journey to the holy cities of Makkah and Madinah with high-end accommodation.",
+    travelType: "Cultural",
+    availableDates: ["2026-04-01", "2026-12-20"],
+    hotel: { name: "Pullman ZamZam Makkah", stars: 5, location: "Makkah" },
+    flight: { airline: "Saudia", departure: "Cairo", arrival: "Jeddah", duration: "2h 15m" },
+    includes: ["Visa processing", "5-star Hotels", "Ground transfers"]
+  },
+  {
+    id: 11,
+    title: "German Heritage & Spas",
+    country: "Germany",
+    price: 3200,
+    duration: "14 Days / 13 Nights",
+    rating: 4.9,
+    reviewCount: 92,
+    image: "/images/german.jpg",
+    description: "Combine world-class medical check-ups with relaxation in the Black Forest. Advanced wellness treatments.",
+    travelType: "Luxury",
+    availableDates: ["2026-06-10", "2026-09-05"],
+    hotel: { name: "Baden-Baden Spa Resort", stars: 5, location: "Baden-Baden" },
+    flight: { airline: "Lufthansa", departure: "Cairo", arrival: "Frankfurt", duration: "4h 45m" },
+    includes: ["Medical check-up", "Spa treatments", "Private guide"]
+  },
+  {
+    id: 12,
+    title: "Petra & Wadi Rum Adventure",
+    country: "Jordan",
+    price: 1100,
+    duration: "6 Days / 5 Nights",
+    rating: 4.8,
+    reviewCount: 345,
+    image: "/images/jordan.jpg.jpg",    travelType: "Adventure",
+    availableDates: ["2026-03-10", "2026-10-15"],
+    hotel: { name: "Movenpick Resort Petra", stars: 5, location: "Wadi Musa" },
+    flight: { airline: "Royal Jordanian", departure: "Cairo", arrival: "Amman", duration: "1h 15m" },
+    includes: ["Entrance fees", "Wadi Rum Jeep Tour", "Authentic Mansaf dinner"]
+  },
+];
+
+export const destinations = trips.map((t, index) => ({
+  id: index + 1,
+  country: t.country,
+  image: t.image,
+  tripCount: Math.floor(Math.random() * 15) + 5,
+}));
+
+export const testimonials = [
+  {
+    id: 1,
+    name: "Rania Allawy",
+    photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200",
+    rating: 5,
+    comment: "An absolutely magical experience! The Maldives trip was beyond our expectations.",
+    trip: "Magical Maldives Escape",
+  },
+  {
+    id: 2,
+    name: "Ahmed Abu-Shaikha",
+    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200",
+    rating: 5,
+    comment: "FarAway made our Paris journey unforgettable. Everything was perfectly organized.",
+    trip: "Paris Romance Journey",
+  }
+];
+
+export const adminStats = {
+  totalUsers: 1248,
+  totalTrips: trips.length,
+  totalBookings: 4521,
+  totalRevenue: 1840000,
+};
+export const teamMembers = [
+  {
+    id: 1,
+    name: "Emily Watson",
+    position: "CEO & Founder",
+    photo: "https://images.unsplash.com/photo-1679745776849-99c231c9b27d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  },
+  {
+    id: 2,
+    name: "James Mitchell",
+    position: "Head of Operations",
+    photo: "https://images.unsplash.com/photo-1623880840102-7df0a9f3545b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  },
+  {
+    id: 3,
+    name: "Sophia Chen",
+    position: "Travel Experience Manager",
+    photo: "https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+  },
+];
+
+export const bookingsPerMonth = [
+  { month: "Jan", bookings: 120 },
+  { month: "Feb", bookings: 185 },
+  { month: "Mar", bookings: 210 },
+  { month: "Apr", bookings: 390 },
+  { month: "May", bookings: 450 },
+  { month: "Jun", bookings: 520 },
+  { month: "Jul", bookings: 610 },
+  { month: "Aug", bookings: 580 },
+  { month: "Sep", bookings: 430 },
+  { month: "Oct", bookings: 320 },
+  { month: "Nov", bookings: 280 },
+  { month: "Dec", bookings: 350 },
+];
+
+export const popularTripsChart = [
+  { name: "Maldives", bookings: 480 },
+  { name: "Santorini", bookings: 390 },
+  { name: "Japan", bookings: 340 },
+  { name: "Paris", bookings: 310 },
+  { name: "Bali", bookings: 280 },
+  { name: "Morocco", bookings: 220 },
+];
