@@ -35,7 +35,7 @@ export function Contact() {
             {[
               {
                 icon: Phone,
-                title: "Phone",
+                title: "Phone Number",
                 lines: ["+96271232747", "+962791695373"],
                 color: "bg-green-100 text-green-600",
               },
