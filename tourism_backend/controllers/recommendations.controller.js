@@ -18,7 +18,7 @@ export const getRecommendations = async (req, res) => {
       },
     });
 
-    // رتّب الرحلات: الأقرب للميزانية أولاً
+ 
     const sorted = trips.sort((a, b) => {
       const budgetNum = parseFloat(budget) || 999999;
       const diffA = Math.abs(parseFloat(a.price) - budgetNum);

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { prisma } from "./prisma.js";
 import authRoutes from "./routes/auth.routes.js";
 import tripsRoutes from "./routes/trips.routes.js";
@@ -7,14 +8,24 @@ import recommendationsRoutes from "./routes/recommendations.routes.js";
 import bookingsRoutes from "./routes/bookings.routes.js";
 import reviewsRoutes from "./routes/reviews.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
+
 const app = express();
+
+// ====================== MIDDLEWARE ======================
+app.use(cors({
+  origin: "http://localhost:5173", // عنوان الفرونت (Vite default)
+  credentials: true,
+}));
 app.use(express.json());
+
+// ====================== ROUTES ======================
 app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripsRoutes);
 app.use("/api/recommendations", recommendationsRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/contact", contactRoutes);
+
 // ====================== USERS ======================
 app.get("/users", async (req, res) => {
   const users = await prisma.users.findMany();
@@ -89,8 +100,6 @@ app.post("/trips", async (req, res) => {
   res.status(201).json(trip);
 });
 
-// باقي الـ trips (put, delete) مشابه للنسخة القديمة...
-
 // ====================== BOOKINGS ======================
 app.post("/bookings", async (req, res) => {
   const { user_id, trips_id, travel_date, travelers_count, total_price, status = "pending" } = req.body;
@@ -124,8 +133,6 @@ app.post("/contact-messages", async (req, res) => {
   });
   res.status(201).json(message);
 });
-
-// يمكنك إضافة نفس النمط لباقي الجداول (countries, hotels, flights, ...)
 
 app.listen(3000, () => {
   console.log("🚀 Server running on http://localhost:3000");
