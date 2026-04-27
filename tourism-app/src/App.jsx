@@ -10,7 +10,9 @@ import { Profile } from "./pages/Profile";
 import { EditProfile } from "./pages/EditProfile";
 import { Register } from './pages/Register';  
 import { ChangePassword } from './pages/ChangePassword';
+import { Payment } from './pages/Payment';
 function App() {
+
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
@@ -24,6 +26,7 @@ function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="contact" element={<Contact />} />
         <Route path="change-password" element={<ChangePassword />} />
+        <Route path="payment/:id" element={<Payment />} />
       </Route>
     </Routes>
   );
