@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Plane, Menu, X, User, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
-import { useAuth } from "../context/AuthContext"; // استيراد الـ Context الحقيقي
+import { useAuth } from "../context/AuthContext";
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   
-  // جلب البيانات الحقيقية من الـ AuthContext
   const { isLoggedIn, user, logout } = useAuth();
 
   const location = useLocation();
@@ -27,6 +26,8 @@ export function Navbar() {
     setProfileOpen(false);
     navigate("/");
   };
+
+  const isAdmin = user?.role === "admin";
 
   return (
     <nav className="bg-green-700 sticky top-0 z-50 shadow-lg font-poppins">
@@ -97,23 +98,8 @@ export function Navbar() {
                     </div>
                     
                     <div className="p-1">
-                      <Link
-                        to="/profile"
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
-                      >
-                        <User className="w-4 h-4" /> Profile
-                      </Link>
-
-                      <Link
-                        to="/my-bookings"
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
-                      >
-                        <Plane className="w-4 h-4" /> My Bookings
-                      </Link>
-
-                      {user?.role === "admin" && (
+                      {isAdmin ? (
+                        // الأدمن: بس الداشبورد
                         <Link
                           to="/admin"
                           onClick={() => setProfileOpen(false)}
@@ -121,6 +107,24 @@ export function Navbar() {
                         >
                           <LayoutDashboard className="w-4 h-4" /> Dashboard
                         </Link>
+                      ) : (
+                        // اليوزر العادي: Profile + My Bookings
+                        <>
+                          <Link
+                            to="/profile"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
+                          >
+                            <User className="w-4 h-4" /> Profile
+                          </Link>
+                          <Link
+                            to="/my-bookings"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
+                          >
+                            <Plane className="w-4 h-4" /> My Bookings
+                          </Link>
+                        </>
                       )}
                       
                       <div className="h-px bg-gray-100 my-1 mx-2" />
@@ -172,8 +176,18 @@ export function Navbar() {
               </div>
             ) : (
               <div className="space-y-1">
-                <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm"><User className="w-4 h-4" /> Profile</Link>
-                <Link to="/my-bookings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm"><Plane className="w-4 h-4" /> My Bookings</Link>
+                {isAdmin ? (
+                  // الأدمن موبايل: بس الداشبورد
+                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm">
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Link>
+                ) : (
+                  // اليوزر العادي موبايل
+                  <>
+                    <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm"><User className="w-4 h-4" /> Profile</Link>
+                    <Link to="/my-bookings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm"><Plane className="w-4 h-4" /> My Bookings</Link>
+                  </>
+                )}
                 <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 text-red-300 hover:bg-white/10 rounded-xl text-sm"><LogOut className="w-4 h-4" /> Logout</button>
               </div>
             )}

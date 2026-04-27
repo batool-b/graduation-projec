@@ -1,14 +1,21 @@
-import { Link, useNavigate } from "react-router-dom"; // تأكد من استخدام react-router-dom
+import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Phone, Edit, Key, Plane, LogOut, Calendar, ChevronRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { trips } from "../data/mockData";
 import { TripCard } from "../components/TripCard";
+import { useEffect } from "react";
 
 export function Profile() {
   const { user, isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
 
-  // حالة إذا لم يكن المستخدم مسجل دخول
+  // الأدمن ما له شغل هنا، نحوله للداشبورد
+  useEffect(() => {
+    if (isLoggedIn && user?.role === "admin") {
+      navigate("/admin", { replace: true });
+    }
+  }, [isLoggedIn, user, navigate]);
+
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
@@ -32,12 +39,11 @@ export function Profile() {
     navigate("/");
   };
 
-  // عرض أول 3 رحلات كمقترحات
   const recommended = trips ? trips.slice(0, 3) : [];
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Header بخش رأس الصفحة */}
+      {/* Header */}
       <div className="bg-linear-to-r from-green-700 to-green-600 py-16 px-4">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-6 text-white">
           <img
@@ -48,10 +54,8 @@ export function Profile() {
           <div className="text-center sm:text-left">
             <h1 className="text-3xl font-bold">{user?.name}</h1>
             <p className="text-green-100 mt-1">{user?.email}</p>
-            <span className={`inline-block mt-2 text-xs font-semibold px-3 py-1 rounded-full ${
-              user?.role === "admin" ? "bg-amber-400 text-amber-900" : "bg-white/20 text-white"
-            }`}>
-              {user?.role === "admin" ? "🛡️ Admin" : "👤 Member"}
+            <span className="inline-block mt-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white">
+              👤 Member
             </span>
           </div>
         </div>
@@ -60,7 +64,7 @@ export function Profile() {
       <div className="max-w-4xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* Sidebar - القائمة الجانبية */}
+          {/* Sidebar */}
           <div className="space-y-3">
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 px-3">Account Settings</h3>
@@ -83,17 +87,6 @@ export function Profile() {
                 >
                   <Plane className="w-4 h-4" /> My Bookings
                 </Link>
-
-                {/* روابط خاصة بالأدمن فقط */}
-                {user?.role === "admin" && (
-                  <Link
-                    to="/admin"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-700 bg-amber-50/50 hover:bg-amber-50 transition-all text-sm font-medium border border-amber-100"
-                  >
-                    <span>📊</span> Admin Dashboard
-                  </Link>
-                )}
-
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 transition-all text-sm mt-2"
@@ -104,7 +97,7 @@ export function Profile() {
             </div>
           </div>
 
-          {/* Main Content - البيانات الشخصية */}
+          {/* Main Content */}
           <div className="md:col-span-2 space-y-5">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-5">
@@ -133,7 +126,7 @@ export function Profile() {
               </div>
             </div>
 
-            {/* Recent Bookings - الحجوزات الأخيرة */}
+            {/* Recent Bookings */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-900">Recent Bookings</h2>
@@ -170,7 +163,7 @@ export function Profile() {
           </div>
         </div>
 
-        {/* Recommended Trips - رحلات مقترحة */}
+        {/* Recommended Trips */}
         <div className="mt-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Recommended For You</h2>

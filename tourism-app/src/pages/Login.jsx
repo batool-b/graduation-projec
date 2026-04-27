@@ -18,11 +18,14 @@ export function Login() {
     setIsLoading(true);
     
     try {
-      // نرسل البيانات لـ AuthContext
       const result = await login(form.email, form.password);
       
       if (result && result.success) {
-        navigate("/profile");
+        if (form.email === "rania@gmail.com") {
+          navigate("/admin");
+        } else {
+          navigate("/profile");
+        }
       } else {
         setError("Invalid email or password. Please try again.");
       }
@@ -131,8 +134,6 @@ export function Login() {
           </div>
 
         </div>
-
-    
 
       </div>
     </div>

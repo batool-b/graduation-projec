@@ -1,7 +1,3 @@
-// ============================================================
-// MOCK DATA — Full 12 Countries Edition
-// ============================================================
-
 export const trips = [
   {
     id: 1,
@@ -107,7 +103,8 @@ export const trips = [
     duration: "9 Days / 8 Nights",
     rating: 4.7,
     reviewCount: 320,
-    image: "/images/bankok.avif",    description: "Experience the vibrant street life of Bangkok and the tropical white-sand beaches of Phuket.",
+    image: "/images/bankok.avif",
+    description: "Experience the vibrant street life of Bangkok and the tropical white-sand beaches of Phuket.",
     travelType: "Beach",
     availableDates: ["2026-05-10", "2026-11-05"],
     hotel: { name: "Ocean View Phuket", stars: 4, location: "Patong Beach" },
@@ -122,7 +119,8 @@ export const trips = [
     duration: "7 Days / 6 Nights",
     rating: 4.6,
     reviewCount: 210,
-    image: "/images/KualaLumpur.jpg.jpg",    description: "Marvel at the Petronas Twin Towers, explore Batu Caves, and enjoy diverse Malaysian street food.",
+    image: "/images/KualaLumpur.jpg.jpg",
+    description: "Marvel at the Petronas Twin Towers, explore Batu Caves, and enjoy diverse Malaysian street food.",
     travelType: "Cultural",
     availableDates: ["2026-06-15", "2026-09-10"],
     hotel: { name: "Skyline Suites", stars: 5, location: "KLCC" },
@@ -185,7 +183,8 @@ export const trips = [
     duration: "6 Days / 5 Nights",
     rating: 4.8,
     reviewCount: 345,
-    image: "/images/jordan.jpg.jpg",    travelType: "Adventure",
+    image: "/images/jordan.jpg.jpg",
+    travelType: "Adventure",
     availableDates: ["2026-03-10", "2026-10-15"],
     hotel: { name: "Movenpick Resort Petra", stars: 5, location: "Wadi Musa" },
     flight: { airline: "Royal Jordanian", departure: "Cairo", arrival: "Amman", duration: "1h 15m" },
@@ -225,6 +224,7 @@ export const adminStats = {
   totalBookings: 4521,
   totalRevenue: 1840000,
 };
+
 export const teamMembers = [
   {
     id: 1,
@@ -268,4 +268,17 @@ export const popularTripsChart = [
   { name: "Paris", bookings: 310 },
   { name: "Bali", bookings: 280 },
   { name: "Morocco", bookings: 220 },
+];
+
+export const mockBookings = [
+  { id: "BK-8821", tripTitle: "Magical Maldives Escape", destination: "Maldives", travelDate: "2026-04-10", travelers: 2, totalPrice: 4998, bookingDate: "2026-03-01", status: "Confirmed" },
+  { id: "BK-9045", tripTitle: "Istanbul City of Two Continents", destination: "Turkey", travelDate: "2026-04-10", travelers: 1, totalPrice: 850, bookingDate: "2026-03-05", status: "Pending" },
+  { id: "BK-1120", tripTitle: "Swiss Alps Winter Adventure", destination: "Switzerland", travelDate: "2026-12-15", travelers: 4, totalPrice: 11200, bookingDate: "2026-03-10", status: "Completed" },
+  { id: "BK-7732", tripTitle: "Umrah Sacred Journey", destination: "Saudi Arabia", travelDate: "2026-04-01", travelers: 3, totalPrice: 4500, bookingDate: "2026-03-12", status: "Cancelled" },
+];
+
+export const mockUsers = [
+  { id: 1, name: "Ahmed Ali", email: "ahmed@example.com", phone: "0790001122", bookings: 3, status: "Active" },
+  { id: 2, name: "Sara Mahmoud", email: "sara@example.com", phone: "0771112233", bookings: 1, status: "Active" },
+  { id: 3, name: "Khaled Omar", email: "khaled@example.com", phone: "0782223344", bookings: 0, status: "Inactive" },
 ];
