@@ -4,10 +4,8 @@
 
 const BASE_URL = "http://localhost:3000/api";
 
-// دالة مساعدة: تجيب التوكن من localStorage
 const getToken = () => localStorage.getItem("token");
 
-// دالة مساعدة: ترسل طلب مع headers صح
 const request = async (endpoint, options = {}) => {
   const token = getToken();
   const headers = {
@@ -42,6 +40,14 @@ export const authAPI = {
     request("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
+    }),
+
+  getMe: () => request("/auth/me"),
+
+  updateProfile: (data) =>
+    request("/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
     }),
 
   changePassword: (data) =>
@@ -81,17 +87,6 @@ export const reviewsAPI = {
     request("/reviews", {
       method: "POST",
       body: JSON.stringify(reviewData),
-    }),
-};
-
-// ====================== PROFILE ======================
-export const profileAPI = {
-  getMe: () => request("/auth/me"),
-
-  update: (data) =>
-    request("/auth/profile", {
-      method: "PUT",
-      body: JSON.stringify(data),
     }),
 };
 

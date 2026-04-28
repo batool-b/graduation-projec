@@ -8,7 +8,7 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -16,30 +16,22 @@ export function Login() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
-    try {
-      const result = await login(form.email, form.password);
-      
-      if (result && result.success) {
-        if (form.email === "rania@gmail.com") {
-          navigate("/admin");
-        } else {
-          navigate("/profile");
-        }
-      } else {
-        setError("Invalid email or password. Please try again.");
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again later.");
-    } finally {
-      setIsLoading(false);
+
+    const result = await login(form.email, form.password);
+    setIsLoading(false);
+
+    if (result.success) {
+      // ✅ التوجيه بناءً على is_admin من الداتابيس
+      navigate(result.user.is_admin ? "/admin" : "/profile");
+    } else {
+      setError(result.error || "Invalid email or password. Please try again.");
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 font-poppins">
       <div className="w-full max-w-md">
-        
+
         {/* Logo Section */}
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center gap-2.5 text-green-700 group">
@@ -54,9 +46,9 @@ export function Login() {
 
         {/* Login Card */}
         <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-10">
-          
+
           {error && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl p-4 mb-6 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl p-4 mb-6">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
               <p className="text-red-600 text-sm font-semibold">{error}</p>
             </div>
@@ -87,7 +79,6 @@ export function Login() {
                 <label className="text-xs uppercase tracking-widest font-bold text-gray-400 block">
                   Password
                 </label>
-                <Link href="#" className="text-xs font-bold text-green-600 hover:text-green-700">Forgot?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -123,7 +114,6 @@ export function Login() {
             </button>
           </form>
 
-          {/* Footer Section */}
           <div className="mt-10 pt-8 border-t border-gray-50 text-center">
             <p className="text-gray-500 text-sm font-medium">
               New to FarAway?{" "}
@@ -134,7 +124,6 @@ export function Login() {
           </div>
 
         </div>
-
       </div>
     </div>
   );

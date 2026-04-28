@@ -41,7 +41,7 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [search, setSearch] = useState("");
 
-  if (!isLoggedIn || user?.role !== "admin") {
+  if (!isLoggedIn || !user?.is_admin)  {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -78,10 +78,10 @@ export function AdminDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center text-white font-bold text-lg">
-              {user.name?.charAt(0)}
+              {user.first_name?.charAt(0)}
             </div>
             <div className="text-white text-sm hidden sm:block">
-              <div className="font-semibold">{user.name}</div>
+              <div className="font-semibold">{user.first_name} {user.last_name}</div>
               <div className="text-green-200">Administrator</div>
             </div>
           </div>

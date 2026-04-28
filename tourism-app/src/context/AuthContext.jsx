@@ -1,58 +1,86 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "../api";
+
 const AuthContext = createContext(undefined);
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // عند بداية التطبيق: تحقق إذا في token محفوظ وجيب بيانات اليوزر
   useEffect(() => {
-    const savedUser = localStorage.getItem("faraway_session");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const userData = await authAPI.getMe();
+          setUser(userData);
+        } catch (err) {
+          // التوكن انتهى أو غلط
+          localStorage.removeItem("token");
+        }
+      }
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
+  // ====================== LOGIN ======================
   const login = async (email, password) => {
-    if (email === "rania@gmail.com" && password === "rania2004") {
-      const userData = { name: "Rania", email: "rania@gmail.com", role: "admin", photo: null };
-      setUser(userData);
-      localStorage.setItem("faraway_session", JSON.stringify(userData));
-      return { success: true };
-    } else if (email === "shahd@gmail.com" && password === "shahd2004") {
-      const userData = { name: "Shahd", email: "shahd@gmail.com", role: "user", photo: null };
-      setUser(userData);
-      localStorage.setItem("faraway_session", JSON.stringify(userData));
-      return { success: true };
-    } else {
-      return { success: false };
+    try {
+      const data = await authAPI.login(email, password);
+      // حفظ التوكن
+      localStorage.setItem("token", data.token);
+      setUser(data.user);
+      return { success: true, user: data.user };
+    } catch (err) {
+      return { success: false, error: err.message };
     }
   };
 
-  const register = (name, email, phone, password) => {
-    const newUser = {
-      id: Date.now(), name, email, phone, role: "user",
-      photo: "https://images.unsplash.com/photo-1679745776849-99c231c9b27d?w=200",
-    };
-    setUser(newUser);
-    localStorage.setItem("faraway_session", JSON.stringify(newUser));
-    return true;
+  // ====================== REGISTER ======================
+  const register = async (userData) => {
+    try {
+      const data = await authAPI.register(userData);
+      // auto-login بعد التسجيل
+      localStorage.setItem("token", data.token);
+      setUser(data.user);
+      return { success: true, user: data.user };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   };
 
+  // ====================== LOGOUT ======================
   const logout = () => {
+    localStorage.removeItem("token");
     setUser(null);
-    localStorage.removeItem("faraway_session");
   };
 
-  const updateProfile = (data) => {
-    if (user) {
-      const updated = { ...user, ...data };
-      setUser(updated);
-      localStorage.setItem("faraway_session", JSON.stringify(updated));
+  // ====================== UPDATE PROFILE ======================
+  const updateProfile = async (data) => {
+    try {
+      const result = await authAPI.updateProfile(data);
+      setUser(result.user);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, register, logout, updateProfile }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoggedIn: !!user,
+        isAdmin: user?.is_admin === true,
+        loading,
+        login,
+        register,
+        logout,
+        updateProfile,
+      }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );

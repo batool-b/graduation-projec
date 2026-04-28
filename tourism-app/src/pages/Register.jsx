@@ -1,25 +1,29 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // تأكد من استخدام react-router-dom
-import { Eye, EyeOff, Plane, CheckCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Plane, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function Register() {
-  const [form, setForm] = useState({ 
-    name: "", 
-    email: "", 
-    phone: "", 
-    password: "", 
-    confirmPassword: "" 
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({}); // تم تحويلها لـ Object عادي
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // دالة التحقق من البيانات (Validation)
   const validate = () => {
     const newErrors = {};
-    if (!form.name.trim()) newErrors.name = "Name is required";
+    if (!form.first_name.trim()) newErrors.first_name = "First name is required";
+    if (!form.last_name.trim()) newErrors.last_name = "Last name is required";
     if (!form.email.trim()) newErrors.email = "Email is required";
     if (!form.phone.trim()) newErrors.phone = "Phone is required";
     if (form.password.length < 6) newErrors.password = "Password must be at least 6 characters";
@@ -27,23 +31,34 @@ export function Register() {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setApiError("");
     const validationErrors = validate();
-    
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    // استدعاء دالة التسجيل من الـ Context
-    register(form.name, form.email, form.phone, form.password);
-    
-    // التوجه للصفحة الرئيسية بعد النجاح
-    navigate("/");
+    setIsLoading(true);
+    const result = await register({
+      first_name: form.first_name,
+      last_name: form.last_name,
+      email: form.email,
+      phone: form.phone,
+      password: form.password,
+    });
+    setIsLoading(false);
+
+    if (result.success) {
+      // إذا admin يروح للداشبورد، إذا user يروح للبروفايل
+      navigate(result.user.is_admin ? "/admin" : "/profile");
+    } else {
+      setApiError(result.error || "Registration failed. Please try again.");
+    }
   };
 
-  // دالة قياس قوة كلمة المرور
   const passwordStrength = () => {
     const p = form.password;
     if (!p) return 0;
@@ -76,17 +91,38 @@ export function Register() {
         </div>
 
         <div className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
+
+          {/* API Error */}
+          {apiError && (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl p-4 mb-6">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <p className="text-red-600 text-sm font-semibold">{apiError}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Full Name */}
-            <div>
-              <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">Full Name</label>
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="John Smith"
-                className={`w-full bg-gray-50 border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all ${errors.name ? "border-red-400" : "border-gray-100 focus:border-green-500"}`}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.name}</p>}
+            {/* First Name + Last Name */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">First Name</label>
+                <input
+                  value={form.first_name}
+                  onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                  placeholder="John"
+                  className={`w-full bg-gray-50 border rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all ${errors.first_name ? "border-red-400" : "border-gray-100 focus:border-green-500"}`}
+                />
+                {errors.first_name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.first_name}</p>}
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">Last Name</label>
+                <input
+                  value={form.last_name}
+                  onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                  placeholder="Smith"
+                  className={`w-full bg-gray-50 border rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all ${errors.last_name ? "border-red-400" : "border-gray-100 focus:border-green-500"}`}
+                />
+                {errors.last_name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.last_name}</p>}
+              </div>
             </div>
 
             {/* Email */}
@@ -130,10 +166,9 @@ export function Register() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              
-              {/* Password Strength Bar */}
+
               {form.password && (
-                <div className="mt-3 animate-in fade-in duration-500">
+                <div className="mt-3">
                   <div className="flex gap-1.5 mb-1.5">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= strength ? strengthColor : "bg-gray-100"}`} />
@@ -156,7 +191,7 @@ export function Register() {
                 className={`w-full bg-gray-50 border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all ${errors.confirmPassword ? "border-red-400" : "border-gray-100 focus:border-green-500"}`}
               />
               {form.confirmPassword && form.password === form.confirmPassword && (
-                <div className="flex items-center gap-1.5 mt-2 ml-1 animate-in zoom-in-50">
+                <div className="flex items-center gap-1.5 mt-2 ml-1">
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   <p className="text-green-600 text-xs font-bold">Passwords match</p>
                 </div>
@@ -166,9 +201,14 @@ export function Register() {
 
             <button
               type="submit"
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-green-200 active:scale-[0.98] mt-4"
+              disabled={isLoading}
+              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-green-200 active:scale-[0.98] mt-4 flex justify-center items-center gap-2"
             >
-              Create Account
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                "Create Account"
+              )}
             </button>
           </form>
 
