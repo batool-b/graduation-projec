@@ -3,6 +3,7 @@ generator client {
 }
 datasource db {
   provider = "mysql"
+  
 }
 
 model bookings {
@@ -141,16 +142,15 @@ model users {
   review        review[]
 }
 
-model admin {
-  id            Int        @id @default(autoincrement())
-  first_name    String     @db.VarChar(255)
-  last_name     String     @db.VarChar(255)
-  email         String     @unique(map: "email") @db.VarChar(255)
-  phone         String     @unique(map: "phone") @db.VarChar(20)
-  password      String     @db.VarChar(255)
-  profile_image String?    @db.VarChar(255)
-  created_at    DateTime   @db.DateTime(0)
-  
+model admins {
+  id            Int      @id @default(autoincrement())
+  first_name    String   @db.VarChar(255)
+  last_name     String   @db.VarChar(255)
+  email         String   @unique(map: "email") @db.VarChar(255)
+  phone         String   @unique(map: "phone") @db.VarChar(20)
+  password      String   @db.VarChar(255)
+  profile_image String?  @db.VarChar(255)
+  created_at    DateTime @db.DateTime(0)
 }
 
 model uses {

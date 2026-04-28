@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import pkg from '@prisma/client';
+const { PrismaClient } = pkg;
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import * as XLSX from "xlsx";
 import { readFileSync } from "fs";
@@ -14,7 +15,6 @@ const adapter = new PrismaMariaDb({
 
 const prisma = new PrismaClient({ adapter });
 
-// قرأ الـ Excel
 const workbook = XLSX.read(readFileSync("./travel_dataset.xlsx"));
 
 function getSheet(name) {
@@ -25,66 +25,46 @@ function getSheet(name) {
 async function main() {
   console.log("🌱 Starting seed...");
 
-  // 1. countries
   const countries = getSheet("countries");
   for (const row of countries) {
     await prisma.countries.upsert({
       where: { id: row.id },
       update: {},
-      create: {
-        id: row.id,
-        cname: row.cname,
-        cimage: row.cimage ?? null,
-      },
+      create: { id: row.id, cname: row.cname, cimage: row.cimage ?? null },
     });
   }
   console.log(`✅ countries: ${countries.length} rows`);
 
-  // 2. travel_types
   const travel_types = getSheet("travel_types");
   for (const row of travel_types) {
     await prisma.travel_types.upsert({
       where: { id: row.id },
       update: {},
-      create: {
-        id: row.id,
-        tname: row.tname,
-      },
+      create: { id: row.id, tname: row.tname },
     });
   }
   console.log(`✅ travel_types: ${travel_types.length} rows`);
 
-  // 3. hotels
   const hotels = getSheet("hotels");
   for (const row of hotels) {
     await prisma.hotels.upsert({
       where: { id: row.id },
       update: {},
-      create: {
-        id: row.id,
-        hotel_name: row.hotel_name,
-        stars: row.stars,
-      },
+      create: { id: row.id, hotel_name: row.hotel_name, stars: row.stars },
     });
   }
   console.log(`✅ hotels: ${hotels.length} rows`);
 
-  // 4. flights
   const flights = getSheet("flights");
   for (const row of flights) {
     await prisma.flights.upsert({
       where: { id: row.id },
       update: {},
-      create: {
-        id: row.id,
-        airline: row.airline,
-        duration: row.duration,
-      },
+      create: { id: row.id, airline: row.airline, duration: row.duration },
     });
   }
   console.log(`✅ flights: ${flights.length} rows`);
 
-  // 5. users
   const users = getSheet("user");
   for (const row of users) {
     await prisma.users.upsert({
@@ -104,7 +84,6 @@ async function main() {
   }
   console.log(`✅ users: ${users.length} rows`);
 
-  // 6. trips
   const trips = getSheet("trips");
   for (const row of trips) {
     await prisma.trips.upsert({
@@ -125,22 +104,16 @@ async function main() {
   }
   console.log(`✅ trips: ${trips.length} rows`);
 
-  // 7. trip_images
   const trip_images = getSheet("trip_images");
   for (const row of trip_images) {
     await prisma.trip_images.upsert({
       where: { id: row.id },
       update: {},
-      create: {
-        id: row.id,
-        trips_id: row.trip_id,
-        image_url: row.image_url,
-      },
+      create: { id: row.id, trips_id: row.trip_id, image_url: row.image_url },
     });
   }
   console.log(`✅ trip_images: ${trip_images.length} rows`);
 
-  // 8. trip_dates
   const trip_dates = getSheet("trip_dates");
   for (const row of trip_dates) {
     await prisma.trip_dates.upsert({
@@ -155,7 +128,6 @@ async function main() {
   }
   console.log(`✅ trip_dates: ${trip_dates.length} rows`);
 
-  // 9. bookings
   const bookings = getSheet("bookings");
   for (const row of bookings) {
     await prisma.bookings.upsert({
@@ -175,7 +147,6 @@ async function main() {
   }
   console.log(`✅ bookings: ${bookings.length} rows`);
 
-  // 10. payments
   const payments = getSheet("payments");
   for (const row of payments) {
     await prisma.payments.upsert({
@@ -193,7 +164,6 @@ async function main() {
   }
   console.log(`✅ payments: ${payments.length} rows`);
 
-  // 11. review
   const reviews = getSheet("review");
   for (const row of reviews) {
     await prisma.review.upsert({
@@ -211,31 +181,22 @@ async function main() {
   }
   console.log(`✅ review: ${reviews.length} rows`);
 
-  // 12. includes
   const includes = getSheet("includes");
   for (const row of includes) {
     await prisma.includes.create({
-      data: {
-        trips_id: row.trip_id,
-        hotels_id: row.hotel_id,
-      },
+      data: { trips_id: row.trip_id, hotels_id: row.hotel_id },
     });
   }
   console.log(`✅ includes: ${includes.length} rows`);
 
-  // 13. uses
   const uses = getSheet("uses");
   for (const row of uses) {
     await prisma.uses.create({
-      data: {
-        trips_id: row.trip_id,
-        flights_id: row.flight_id,
-      },
+      data: { trips_id: row.trip_id, flights_id: row.flight_id },
     });
   }
   console.log(`✅ uses: ${uses.length} rows`);
 
-  // 14. contact_messages
   const messages = getSheet("contact_messages");
   for (const row of messages) {
     await prisma.contact_messages.upsert({
@@ -252,7 +213,42 @@ async function main() {
   }
   console.log(`✅ contact_messages: ${messages.length} rows`);
 
-  console.log("\n🎉 Seed completed! 545 records inserted.");
+  // admins
+  const admins = [
+    {
+      first_name: "Eman",
+      last_name: "Ahmad",
+      email: "emanahmad@admin.com",
+      phone: "0791695374",
+      password: "123456",
+      profile_image: null,
+      created_at: new Date(),
+    },
+    {
+      first_name: "Rania",
+      last_name: "Waleed",
+      email: "raniawaleed@admin.com",
+      phone: "0792234567",
+      password: "123456",
+      profile_image: null,
+      created_at: new Date(),
+    },
+    {
+      first_name: "Batool",
+      last_name: "Hussain",
+      email: "batoolhussain@admin.com",
+      phone: "0793234567",
+      password: "123456",
+      profile_image: null,
+      created_at: new Date(),
+    },
+  ];
+  for (const admin of admins) {
+    await prisma.admins.create({ data: admin });
+  }
+  console.log("✅ admins: 3 rows");
+
+  console.log("\n🎉 Seed completed! 548 records inserted.");
 }
 
 main()
