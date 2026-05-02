@@ -41,3 +41,32 @@ export const getMyBookings = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// إلغاء حجز
+export const cancelBooking = async (req, res) => {
+  const user_id = req.user.id;
+  const booking_id = parseInt(req.params.id);
+
+  try {
+    // تأكد إن الحجز يخص المستخدم
+    const booking = await prisma.bookings.findFirst({
+      where: { id: booking_id, user_id },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found." });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({ error: "Booking is already cancelled." });
+    }
+
+    const updated = await prisma.bookings.update({
+      where: { id: booking_id },
+      data: { status: "cancelled" },
+    });
+
+    res.json({ message: "Booking cancelled successfully.", booking: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

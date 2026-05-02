@@ -1,9 +1,9 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "mysql"
-  
 }
 
 model bookings {
@@ -35,6 +35,7 @@ model countries {
   id     Int     @id @default(autoincrement())
   cname  String  @unique(map: "cname") @db.VarChar(255)
   cimage String? @db.VarChar(255)
+  trips  trips[]
 }
 
 model flights {
@@ -89,8 +90,9 @@ model review {
 }
 
 model travel_types {
-  id    Int    @id @default(autoincrement())
-  tname String @unique(map: "tname") @db.VarChar(255)
+  id    Int     @id @default(autoincrement())
+  tname String  @unique(map: "tname") @db.VarChar(255)
+  trips trips[]
 }
 
 model trip_dates {
@@ -127,6 +129,8 @@ model trips {
   trip_dates      trip_dates[]
   trip_images     trip_images[]
   uses            uses[]
+  countries       countries?    @relation(fields: [countries_id], references: [id])
+  travel_types    travel_types? @relation(fields: [travel_types_id], references: [id])
 }
 
 model users {
@@ -160,6 +164,6 @@ model uses {
   trips      trips   @relation(fields: [trips_id], references: [id], onUpdate: Restrict, map: "uses_ibfk_1")
   flights    flights @relation(fields: [flights_id], references: [id], onUpdate: Restrict, map: "uses_ibfk_2")
 
-  @@index([flights_id], map: "flights_id")
+  @@index([flights_id], map: "trips_id")
   @@index([trips_id], map: "trips_id")
 }

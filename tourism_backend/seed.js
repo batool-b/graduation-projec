@@ -127,7 +127,7 @@ async function main() {
     });
   }
   console.log(`✅ trip_dates: ${trip_dates.length} rows`);
-
+ 
   const bookings = getSheet("bookings");
   for (const row of bookings) {
     await prisma.bookings.upsert({
