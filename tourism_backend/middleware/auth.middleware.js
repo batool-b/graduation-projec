@@ -10,7 +10,11 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    // ✅ التعديل: حول الـ id لـ Int دايماً لأن JWT بيحوله لـ String
+    req.user = {
+      ...decoded,
+      id: parseInt(decoded.id),
+    };
     next();
   } catch (err) {
     return res.status(403).json({ error: "Invalid token." });
