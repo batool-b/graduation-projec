@@ -42,7 +42,13 @@ export const authAPI = {
       body: JSON.stringify(userData),
     }),
 
-  getMe: () => request("/auth/me"),
+  getMe: () =>
+    request("/auth/me", {
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+      },
+    }),
 
   updateProfile: (data) =>
     request("/auth/profile", {
@@ -97,4 +103,51 @@ export const contactAPI = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+};
+
+// ====================== ADMIN ======================
+export const adminAPI = {
+  // Overview
+  getOverview: () => request("/admin/overview"),
+
+  // Users
+  getUsers: () => request("/admin/users"),
+  getUser: (id) => request(`/admin/users/${id}`),
+  createUser: (data) =>
+    request("/admin/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateUser: (id, data) =>
+    request(`/admin/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteUser: (id) =>
+    request(`/admin/users/${id}`, { method: "DELETE" }),
+
+  // Trips
+  getTrips: () => request("/admin/trips"),
+  createTrip: (data) =>
+    request("/admin/trips", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateTrip: (id, data) =>
+    request(`/admin/trips/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteTrip: (id) =>
+    request(`/admin/trips/${id}`, { method: "DELETE" }),
+
+  // Bookings
+  getBookings: () => request("/admin/bookings"),
+  updateBookingStatus: (id, status) =>
+    request(`/admin/bookings/${id}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    }),
+  deleteBooking: (id) =>
+    request(`/admin/bookings/${id}`, { method: "DELETE" }),
 };

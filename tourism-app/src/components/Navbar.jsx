@@ -27,7 +27,8 @@ export function Navbar() {
     navigate("/");
   };
 
-  const isAdmin = user?.role === "admin";
+  // ✅ FIX: استخدم is_admin بدل role
+  const isAdmin = user?.is_admin === true;
 
   return (
     <nav className="bg-green-700 sticky top-0 z-50 shadow-lg font-poppins">
@@ -83,30 +84,39 @@ export function Navbar() {
                   className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-all rounded-lg px-3 py-1.5 border border-white/10"
                 >
                   <img
-                    src={user?.photo || "https://ui-avatars.com/api/?name=" + user?.name}
+                    src={user?.photo || "https://ui-avatars.com/api/?name=" + user?.first_name}
                     className="w-8 h-8 rounded-full object-cover border-2 border-white/50"
                   />
-                  <span className="text-white text-sm font-medium">{user?.name?.split(" ")[0]}</span>
+                  <span className="text-white text-sm font-medium">{user?.first_name}</span>
                   <ChevronDown className="w-4 h-4 text-white/70" />
                 </button>
 
                 {profileOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in duration-200">
                     <div className="px-4 py-4 bg-gray-50/50 border-b border-gray-100">
-                      <p className="text-sm font-bold text-gray-800">{user?.name}</p>
+                      <p className="text-sm font-bold text-gray-800">{user?.first_name} {user?.last_name}</p>
                       <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                     </div>
                     
                     <div className="p-1">
                       {isAdmin ? (
-                        // الأدمن: بس الداشبورد
-                        <Link
-                          to="/admin"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
-                        >
-                          <LayoutDashboard className="w-4 h-4" /> Dashboard
-                        </Link>
+                        // ✅ الأدمن: Dashboard + Profile
+                        <>
+                          <Link
+                            to="/admin"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
+                          >
+                            <LayoutDashboard className="w-4 h-4" /> Dashboard
+                          </Link>
+                          <Link
+                            to="/profile"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors"
+                          >
+                            <User className="w-4 h-4" /> Profile
+                          </Link>
+                        </>
                       ) : (
                         // اليوزر العادي: Profile + My Bookings
                         <>
@@ -177,18 +187,29 @@ export function Navbar() {
             ) : (
               <div className="space-y-1">
                 {isAdmin ? (
-                  // الأدمن موبايل: بس الداشبورد
-                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm">
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
-                  </Link>
+                  // ✅ الأدمن موبايل: Dashboard + Profile
+                  <>
+                    <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm">
+                      <LayoutDashboard className="w-4 h-4" /> Dashboard
+                    </Link>
+                    <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm">
+                      <User className="w-4 h-4" /> Profile
+                    </Link>
+                  </>
                 ) : (
                   // اليوزر العادي موبايل
                   <>
-                    <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm"><User className="w-4 h-4" /> Profile</Link>
-                    <Link to="/my-bookings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm"><Plane className="w-4 h-4" /> My Bookings</Link>
+                    <Link to="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm">
+                      <User className="w-4 h-4" /> Profile
+                    </Link>
+                    <Link to="/my-bookings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl text-sm">
+                      <Plane className="w-4 h-4" /> My Bookings
+                    </Link>
                   </>
                 )}
-                <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 text-red-300 hover:bg-white/10 rounded-xl text-sm"><LogOut className="w-4 h-4" /> Logout</button>
+                <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 text-red-300 hover:bg-white/10 rounded-xl text-sm">
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
               </div>
             )}
           </div>

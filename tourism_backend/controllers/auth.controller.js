@@ -11,7 +11,6 @@ export const register = async (req, res) => {
   }
 
   try {
-    // تحقق إذا الإيميل موجود في users أو admins
     const existingUser = await prisma.users.findUnique({ where: { email } });
     const existingAdmin = await prisma.admins.findUnique({ where: { email } });
 
@@ -65,7 +64,6 @@ export const login = async (req, res) => {
   }
 
   try {
-    // فحص جدول admins أولاً
     const admin = await prisma.admins.findUnique({ where: { email } });
     if (admin) {
       const isMatch = await bcrypt.compare(password, admin.password);
@@ -93,7 +91,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // فحص جدول users
     const user = await prisma.users.findUnique({ where: { email } });
     if (!user) {
       return res.status(404).json({ error: "User not found." });
@@ -144,6 +141,8 @@ export const getMe = async (req, res) => {
         },
       });
       if (!admin) return res.status(404).json({ error: "Admin not found." });
+
+      // ✅ FIX: is_admin دايماً موجودة بالـ response
       return res.json({ ...admin, is_admin: true });
     }
 
@@ -160,6 +159,7 @@ export const getMe = async (req, res) => {
       },
     });
     if (!user) return res.status(404).json({ error: "User not found." });
+
     return res.json({ ...user, is_admin: false });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -181,17 +181,37 @@ export const updateProfile = async (req, res) => {
       const updated = await prisma.admins.update({
         where: { id: req.user.id },
         data: updateData,
-        select: { id: true, first_name: true, last_name: true, email: true, phone: true, profile_image: true },
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          phone: true,
+          profile_image: true,
+        },
       });
-      return res.json({ message: "Profile updated successfully.", user: { ...updated, is_admin: true } });
+      return res.json({
+        message: "Profile updated successfully.",
+        user: { ...updated, is_admin: true },
+      });
     }
 
     const updated = await prisma.users.update({
       where: { id: req.user.id },
       data: updateData,
-      select: { id: true, first_name: true, last_name: true, email: true, phone: true, profile_image: true },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone: true,
+        profile_image: true,
+      },
     });
-    return res.json({ message: "Profile updated successfully.", user: { ...updated, is_admin: false } });
+    return res.json({
+      message: "Profile updated successfully.",
+      user: { ...updated, is_admin: false },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
