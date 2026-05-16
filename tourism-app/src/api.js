@@ -87,6 +87,15 @@ export const bookingsAPI = {
     request(`/bookings/${id}/cancel`, { method: "PUT" }),
 };
 
+// ====================== PAYMENTS ======================
+export const paymentsAPI = {
+  create: (paymentData) =>
+    request("/payments", {
+      method: "POST",
+      body: JSON.stringify(paymentData),
+    }),
+};
+
 // ====================== REVIEWS ======================
 export const reviewsAPI = {
   create: (reviewData) =>

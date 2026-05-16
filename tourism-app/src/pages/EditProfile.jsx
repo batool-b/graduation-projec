@@ -1,24 +1,27 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // تأكد من المسار react-router-dom
+import { Link, useNavigate } from "react-router-dom";
 import { Camera, Save, ArrowLeft, CheckCircle } from "lucide-react";
+import { authAPI } from "../api";
 import { useAuth } from "../context/AuthContext";
 
 export function EditProfile() {
   const { user, isLoggedIn, updateProfile } = useAuth();
   const navigate = useNavigate();
-  const [saved, setSaved] = useState(false);
-  
-  // الحالة الابتدائية للنموذج
+
   const [form, setForm] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    photo: user?.photo || "",
+    first_name: user?.first_name || "",
+    last_name:  user?.last_name  || "",
+    email:      user?.email      || "",
+    phone:      user?.phone      || "",
   });
+
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [error, setError]     = useState("");
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-poppins">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="mb-4 text-gray-600">Please login to edit your profile</p>
           <Link to="/login" className="bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold">Login</Link>
@@ -27,23 +30,34 @@ export function EditProfile() {
     );
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // تحديث البيانات في الـ Context
-    updateProfile(form);
-    
-    setSaved(true);
-    
-    // إخفاء رسالة النجاح والعودة للبروفايل بعد ثانيتين
-    setTimeout(() => { 
-      setSaved(false); 
-      navigate("/profile"); 
-    }, 2000);
+    setSaving(true);
+    setError("");
+    try {
+      const updated = await authAPI.updateProfile({
+        first_name: form.first_name,
+        last_name:  form.last_name,
+        email:      form.email,
+        phone:      form.phone,
+      });
+      // تحديث الـ Context بالبيانات الجديدة
+      if (updateProfile) updateProfile(updated.user || updated);
+      setSaved(true);
+      setTimeout(() => { setSaved(false); navigate("/profile"); }, 2000);
+    } catch (err) {
+      setError(err.message || "Failed to update profile.");
+    } finally {
+      setSaving(false);
+    }
   };
 
+  const fullName = `${form.first_name} ${form.last_name}`.trim() || "User";
+  const avatarUrl = user?.profile_image ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=15803d&color=fff`;
+
   return (
-    <div className="bg-gray-50 min-h-screen font-poppins">
+    <div className="bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="bg-linear-to-r from-green-700 to-green-600 py-10 px-4 text-white">
         <div className="max-w-2xl mx-auto">
@@ -56,21 +70,26 @@ export function EditProfile() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-10">
-        {/* Success Message */}
+        {/* Success */}
         {saved && (
-          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4 mb-6 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
             <CheckCircle className="w-5 h-5 text-green-600" />
             <p className="text-green-700 font-bold">Profile updated successfully!</p>
           </div>
         )}
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-6 text-red-600 text-sm">
+            ❌ {error}
+          </div>
+        )}
 
-        <div className="bg-white rounded-4xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
-          
-          {/* Profile Picture Display */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          {/* Avatar */}
           <div className="flex flex-col items-center mb-10">
             <div className="relative">
               <img
-                src={form.photo || `https://ui-avatars.com/api/?name=${form.name}&background=15803d&color=fff`}
+                src={avatarUrl}
                 alt="Profile"
                 className="w-28 h-28 rounded-3xl object-cover border-4 border-white shadow-md"
               />
@@ -82,20 +101,33 @@ export function EditProfile() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Full Name */}
+            {/* First Name */}
             <div>
-              <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">Full Name</label>
+              <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">First Name</label>
               <input
                 required
                 type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Rania ..."
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none font-medium"
+                value={form.first_name}
+                onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                placeholder="Rania"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all font-medium"
               />
             </div>
 
-            {/* Email Address */}
+            {/* Last Name */}
+            <div>
+              <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">Last Name</label>
+              <input
+                required
+                type="text"
+                value={form.last_name}
+                onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                placeholder="Ahmad"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all font-medium"
+              />
+            </div>
+
+            {/* Email */}
             <div>
               <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">Email Address</label>
               <input
@@ -104,11 +136,11 @@ export function EditProfile() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="rania@example.com"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none font-medium"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all font-medium"
               />
             </div>
 
-            {/* Phone Number */}
+            {/* Phone */}
             <div>
               <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">Phone Number</label>
               <input
@@ -116,29 +148,23 @@ export function EditProfile() {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="+962 7XXX XXXX"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none font-medium"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all font-medium"
               />
             </div>
 
-            {/* Photo URL */}
-            <div>
-              <label className="text-xs uppercase tracking-widest font-bold text-gray-400 mb-2 block ml-1">Profile Photo URL</label>
-              <input
-                type="url"
-                value={form.photo}
-                onChange={(e) => setForm({ ...form, photo: e.target.value })}
-                placeholder="https://example.com/photo.jpg"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none font-medium"
-              />
-            </div>
-
-            {/* Action Buttons */}
+            {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button
                 type="submit"
-                className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-green-200 active:scale-[0.98]"
+                disabled={saving}
+                className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-green-200 disabled:bg-gray-300"
               >
-                <Save className="w-5 h-5" /> Save Changes
+                {saving ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                {saving ? "Saving..." : "Save Changes"}
               </button>
               <Link
                 to="/profile"
@@ -153,3 +179,4 @@ export function EditProfile() {
     </div>
   );
 }
+

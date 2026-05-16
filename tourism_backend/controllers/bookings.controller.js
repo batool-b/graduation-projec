@@ -32,7 +32,10 @@ export const getMyBookings = async (req, res) => {
       where: { user_id },
       include: {
         trips: {
-          include: { trip_images: true },
+          include: { 
+            trip_images: true,
+            countries: true,
+          },
         },
       },
     });
@@ -41,6 +44,7 @@ export const getMyBookings = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 // إلغاء حجز
 export const cancelBooking = async (req, res) => {
   const user_id = req.user.id;

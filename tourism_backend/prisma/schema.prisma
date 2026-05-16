@@ -164,6 +164,6 @@ model uses {
   trips      trips   @relation(fields: [trips_id], references: [id], onUpdate: Restrict, map: "uses_ibfk_1")
   flights    flights @relation(fields: [flights_id], references: [id], onUpdate: Restrict, map: "uses_ibfk_2")
 
-  @@index([flights_id], map: "trips_id")
-  @@index([trips_id], map: "trips_id")
+  @@index([flights_id], map: "flights_id")
+  @@index([trips_id], map: "uses_trips_id")
 }

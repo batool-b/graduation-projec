@@ -1,31 +1,91 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom"; // تأكد من المسار الصحيح حسب نسخة الـ router
+import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X, ChevronDown } from "lucide-react";
-import { trips } from "../data/mockData";
+import { tripsAPI } from "../api";
 import { TripCard } from "../components/TripCard";
+
+const COUNTRIES = {
+  1: "Thailand", 2: "France", 3: "Indonesia", 4: "Turkey",
+  5: "Egypt", 6: "Switzerland", 7: "Maldives", 8: "Malaysia",
+  9: "UAE", 10: "Saudi Arabia", 11: "Germany", 12: "Jordan"
+};
+
+const TRAVEL_TYPES = {
+  1: "Beach", 2: "Cultural", 3: "Adventure", 4: "Romantic",
+  5: "Religious", 6: "Medical", 7: "City Tour", 8: "Luxury",
+  9: "Heritage"
+};
+
+function normalizeTrip(t) {
+  const firstImage = t.trip_images?.[0]?.image_url || "/images/hero.png";
+  return {
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    price: parseFloat(t.price),
+    duration: t.duration ? `${t.duration} Days` : "N/A",
+    rating: t.rating || 0,
+    reviewCount: t.review?.length || 0,
+    image: firstImage,
+    country: COUNTRIES[t.countries_id] || "N/A",
+    travelType: TRAVEL_TYPES[t.travel_types_id] || "N/A",
+    availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],
+    includes: [...new Set(t.includes?.map((i) => i.hotels?.hotel_name).filter(Boolean))] || [],
+    hotel: t.includes?.[0]?.hotels
+      ? { name: t.includes[0].hotels.hotel_name, stars: t.includes[0].hotels.stars }
+      : null,
+    flight: t.uses?.[0]?.flights
+      ? { airline: t.uses[0].flights.airline, duration: `${t.uses[0].flights.duration} hrs` }
+      : null,
+  };
+}
 
 export function Trips() {
   const [searchParams] = useSearchParams();
+
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [countries, setCountries] = useState([]);
+  const [travelTypes, setTravelTypes] = useState([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     country: searchParams.get("destination") || "",
     travelType: searchParams.get("type") || "",
     maxPrice: 5000,
-    duration: "",
     date: searchParams.get("date") || "",
   });
   const [sortBy, setSortBy] = useState("popularity");
 
-  const countries = [...new Set(trips.map((t) => t.country))];
-  const travelTypes = [...new Set(trips.map((t) => t.travelType))];
+  const fetchTrips = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = {};
+      if (filters.maxPrice < 5000) params.price_max = filters.maxPrice;
+      if (filters.date) params.date = filters.date;
+
+      const data = await tripsAPI.getAll(params);
+      const normalized = data.map(normalizeTrip);
+      setTrips(normalized);
+      setCountries([...new Set(normalized.map((t) => t.country).filter((c) => c !== "N/A"))]);
+      setTravelTypes([...new Set(normalized.map((t) => t.travelType).filter((ty) => ty !== "N/A"))]);
+    } catch (err) {
+      setError("Failed to load trips. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTrips();
+  }, [filters.date, filters.maxPrice]);
 
   const filtered = trips
     .filter((t) => {
       if (filters.country && !t.country.toLowerCase().includes(filters.country.toLowerCase())) return false;
       if (filters.travelType && t.travelType !== filters.travelType) return false;
       if (t.price > filters.maxPrice) return false;
-      if (filters.duration && t.duration !== filters.duration) return false;
-      // ملاحظة: فلتر التاريخ يحتاج لمنطق إضافي إذا أردت تفعيله فعلياً
       return true;
     })
     .sort((a, b) => {
@@ -36,18 +96,49 @@ export function Trips() {
     });
 
   const clearFilters = () => {
-    setFilters({ country: "", travelType: "", maxPrice: 5000, duration: "", date: "" });
+    setFilters({ country: "", travelType: "", maxPrice: 5000, date: "" });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-green-700 to-green-600 py-14 px-4 text-white text-center">
+          <h1 className="text-4xl font-bold mb-2">Explore Our Trips</h1>
+          <p className="text-green-100">Loading adventures for you...</p>
+        </div>
+        <div className="flex justify-center items-center py-24">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center bg-white rounded-2xl shadow-sm border p-10 max-w-sm w-full">
+          <div className="text-4xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+          <p className="text-gray-500 text-sm mb-5">{error}</p>
+          <button
+            onClick={() => { setError(""); fetchTrips(); }}
+            className="bg-green-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-green-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Page Header */}
-<div className="bg-linear-to-r from-green-700 to-green-600 py-14 px-4 text-white text-center">        <h1 className="text-4xl font-bold mb-2">Explore Our Trips</h1>
+      <div className="bg-gradient-to-r from-green-700 to-green-600 py-14 px-4 text-white text-center">
+        <h1 className="text-4xl font-bold mb-2">Explore Our Trips</h1>
         <p className="text-green-100">Discover {trips.length}+ handpicked travel experiences</p>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Top Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <button
@@ -58,7 +149,7 @@ export function Trips() {
               Filters
             </button>
             <span className="text-gray-500 text-sm">{filtered.length} trips found</span>
-            {(filters.country || filters.travelType || filters.maxPrice < 5000) && (
+            {(filters.country || filters.travelType || filters.maxPrice < 5000 || filters.date) && (
               <button
                 onClick={clearFilters}
                 className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700"
@@ -83,7 +174,6 @@ export function Trips() {
         </div>
 
         <div className="flex gap-6">
-          {/* Sidebar Filters */}
           {filtersOpen && (
             <aside className="w-64 shrink-0">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sticky top-20">
@@ -94,7 +184,6 @@ export function Trips() {
                   </button>
                 </div>
 
-                {/* Country */}
                 <div className="mb-5">
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Country</label>
                   <select
@@ -107,7 +196,6 @@ export function Trips() {
                   </select>
                 </div>
 
-                {/* Travel Type */}
                 <div className="mb-5">
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Travel Type</label>
                   <div className="space-y-2">
@@ -138,14 +226,13 @@ export function Trips() {
                   </div>
                 </div>
 
-                {/* Price Range */}
                 <div className="mb-5">
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">
                     Max Price: <span className="text-green-600">${filters.maxPrice.toLocaleString()}</span>
                   </label>
                   <input
                     type="range"
-                    min={500}
+                    min={100}
                     max={5000}
                     step={100}
                     value={filters.maxPrice}
@@ -153,12 +240,11 @@ export function Trips() {
                     className="w-full accent-green-600"
                   />
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>$500</span>
+                    <span>$100</span>
                     <span>$5,000</span>
                   </div>
                 </div>
 
-                {/* Travel Date */}
                 <div className="mb-2">
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Travel Date</label>
                   <input
@@ -179,7 +265,6 @@ export function Trips() {
             </aside>
           )}
 
-          {/* Trip Grid */}
           <div className="flex-1">
             {filtered.length === 0 ? (
               <div className="text-center py-20">

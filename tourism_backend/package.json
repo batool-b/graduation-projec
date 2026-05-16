@@ -8,7 +8,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "@prisma/adapter-mariadb": "^7.6.0",
+    "@prisma/adapter-mariadb": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",

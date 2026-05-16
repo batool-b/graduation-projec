@@ -1,26 +1,79 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Calendar, Users, MessageSquare, ArrowRight, MapPin, Clock } from "lucide-react";
-import { trips } from "../data/mockData";
+import { tripsAPI } from "../api";
 import { useAuth } from "../context/AuthContext";
+
+// ─── normalizeTrip (نفس الـ helper من Trips.jsx و TripDetails.jsx) ───────────
+function normalizeTrip(t) {
+  const firstImage = t.trip_images?.[0]?.image_url || "/images/hero.png";
+  return {
+    id: t.id,
+    title: t.title,
+    price: parseFloat(t.price),
+    duration: t.duration ? `${t.duration} Days` : "N/A",
+    image: firstImage,
+    country: t.countries?.cname || "N/A",
+    travelType: t.travel_types?.tname || "N/A",
+    availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],
+  };
+}
 
 export function Booking() {
   const { id } = useParams();
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
-  const trip = trips.find((t) => t.id === Number(id));
-  
+
+  // ─── State ──────────────────────────────────────────────────────────────────
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ travelers: 1, date: "", requests: "" });
   const [errors, setErrors] = useState({});
 
-  if (!trip) {
+  // ─── جلب الرحلة من الباك ──────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchTrip = async () => {
+      setLoading(true);
+      try {
+        const data = await tripsAPI.getById(id);
+        setTrip(normalizeTrip(data));
+      } catch (err) {
+        setError("Trip not found.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrip();
+  }, [id]);
+
+  // ─── Loading ────────────────────────────────────────────────────────────────
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Trip not found. <Link to="/trips" className="text-green-600">Browse Trips</Link></p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading trip details...</p>
+        </div>
       </div>
     );
   }
 
+  // ─── Trip not found ─────────────────────────────────────────────────────────
+  if (error || !trip) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">
+          Trip not found.{" "}
+          <Link to="/trips" className="text-green-600">
+            Browse Trips
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  // ─── Login required ─────────────────────────────────────────────────────────
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -28,7 +81,10 @@ export function Booking() {
           <div className="text-4xl mb-4">🔒</div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">Login Required</h2>
           <p className="text-gray-500 text-sm mb-5">Please login to book this trip</p>
-          <Link to="/login" className="block w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 text-center">
+          <Link
+            to="/login"
+            className="block w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 text-center"
+          >
             Login to Continue
           </Link>
         </div>
@@ -48,13 +104,16 @@ export function Booking() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) { 
-      setErrors(validationErrors); 
-      return; 
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
     }
-    navigate(`/payment/${trip.id}?travelers=${form.travelers}&date=${form.date}&total=${totalPrice}`);
+    navigate(
+      `/payment/${trip.id}?travelers=${form.travelers}&date=${form.date}&total=${totalPrice}`
+    );
   };
 
+  // ─── UI ─────────────────────────────────────────────────────────────────────
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-linear-to-r from-green-700 to-green-600 py-12 px-4 text-white">
@@ -72,10 +131,12 @@ export function Booking() {
 
       <div className="max-w-5xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT: Booking Form */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Booking Details</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Travelers */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-2">
                     <Users className="w-4 h-4 text-green-600" /> Number of Travelers
@@ -85,18 +146,27 @@ export function Booking() {
                       type="button"
                       onClick={() => setForm({ ...form, travelers: Math.max(1, form.travelers - 1) })}
                       className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700"
-                    > − </button>
-                    <span className="w-12 text-center text-xl font-bold text-gray-900">{form.travelers}</span>
+                    >
+                      −
+                    </button>
+                    <span className="w-12 text-center text-xl font-bold text-gray-900">
+                      {form.travelers}
+                    </span>
                     <button
                       type="button"
                       onClick={() => setForm({ ...form, travelers: Math.min(20, form.travelers + 1) })}
                       className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700"
-                    > + </button>
+                    >
+                      +
+                    </button>
                     <span className="text-sm text-gray-500 ml-2">max 20 travelers</span>
                   </div>
-                  {errors.travelers && <p className="text-red-500 text-xs mt-1">{errors.travelers}</p>}
+                  {errors.travelers && (
+                    <p className="text-red-500 text-xs mt-1">{errors.travelers}</p>
+                  )}
                 </div>
 
+                {/* Date */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-green-600" /> Travel Date
@@ -104,16 +174,23 @@ export function Booking() {
                   <select
                     value={form.date}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
-                    className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.date ? "border-red-400" : "border-gray-200"}`}
+                    className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 ${
+                      errors.date ? "border-red-400" : "border-gray-200"
+                    }`}
                   >
                     <option value="">Select a date</option>
                     {trip.availableDates.map((date) => (
-                      <option key={date} value={date}>{date}</option>
+                      <option key={date} value={date}>
+                        {date}
+                      </option>
                     ))}
                   </select>
-                  {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
+                  {errors.date && (
+                    <p className="text-red-500 text-xs mt-1">{errors.date}</p>
+                  )}
                 </div>
 
+                {/* Special Requests */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-green-600" /> Special Requests
@@ -138,10 +215,15 @@ export function Booking() {
             </div>
           </div>
 
+          {/* RIGHT: Trip Summary */}
           <div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-20">
               <h3 className="font-bold text-gray-900 mb-4">Trip Summary</h3>
-              <img src={trip.image} alt={trip.title} className="w-full h-36 object-cover rounded-xl mb-4" />
+              <img
+                src={trip.image}
+                alt={trip.title}
+                className="w-full h-36 object-cover rounded-xl mb-4"
+              />
               <h4 className="font-bold text-gray-900 mb-2">{trip.title}</h4>
               <div className="space-y-2 mb-5">
                 <div className="flex items-center gap-2 text-sm text-gray-500">

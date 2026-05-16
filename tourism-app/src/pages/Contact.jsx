@@ -1,20 +1,32 @@
 import { useState } from "react";
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from "lucide-react";
+import { contactAPI } from "../api";
 
 export function Contact() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted]   = useState(false);
+  const [error, setError]           = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // هنا مستقبلاً يتم الربط مع الباك إند: POST /api/contact
-    setSubmitted(true);
-    
-    // إخفاء رسالة النجاح بعد 5 ثوانٍ
-    setTimeout(() => setSubmitted(false), 5000);
-    
-    // إعادة تعيين الحقول
-    setForm({ name: "", email: "", subject: "", message: "" });
+    setSubmitting(true);
+    setError("");
+    try {
+      await contactAPI.send({
+        name:    form.name,
+        email:   form.email,
+        subject: form.subject,
+        message: form.message,
+      });
+      setSubmitted(true);
+      setForm({ name: "", email: "", subject: "", message: "" });
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err) {
+      setError(err.message || "Failed to send message. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -29,34 +41,12 @@ export function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Contact Details */}
           <div className="space-y-5">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-5">Get in Touch</h2>
-            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-5">Get in Touch</h2>
             {[
-              {
-                icon: Phone,
-                title: "Phone Number",
-                lines: ["+96271232747", "+962791695373"],
-                color: "bg-green-100 text-green-600",
-              },
-              {
-                icon: Mail,
-                title: "Email",
-                lines: ["faraway@gmail.com", "supportfaraway@gmail.com"],
-                color: "bg-blue-100 text-blue-600",
-              },
-              {
-                icon: MapPin,
-                title: "Address",
-                lines: ["123 Travel Street", "Irbid, Jordan"],
-                color: "bg-purple-100 text-purple-600",
-              },
-              {
-                icon: Clock,
-                title: "Working Hours",
-                lines: ["Mon – Fri: 9:00 AM – 6:00 PM", "Sat: 10:00 AM – 4:00 PM"],
-                color: "bg-amber-100 text-amber-600",
-              },
+              { icon: Phone,  title: "Phone Number",  lines: ["+96271232747", "+962791695373"],                   color: "bg-green-100 text-green-600"   },
+              { icon: Mail,   title: "Email",          lines: ["faraway@gmail.com", "supportfaraway@gmail.com"],   color: "bg-blue-100 text-blue-600"     },
+              { icon: MapPin, title: "Address",        lines: ["123 Travel Street", "Irbid, Jordan"],              color: "bg-purple-100 text-purple-600" },
+              { icon: Clock,  title: "Working Hours",  lines: ["Mon – Fri: 9:00 AM – 6:00 PM", "Sat: 10:00 AM – 4:00 PM"], color: "bg-amber-100 text-amber-600" },
             ].map((item) => (
               <div key={item.title} className="flex gap-4 p-4 bg-gray-50 rounded-2xl">
                 <div className={`w-10 h-10 ${item.color} rounded-xl flex items-center justify-center shrink-0`}>
@@ -77,10 +67,17 @@ export function Contact() {
             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Send a Message</h2>
 
+              {/* Success */}
               {submitted && (
                 <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                   <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
                   <p className="text-green-700 text-sm font-medium">Message sent successfully! We'll get back to you soon.</p>
+                </div>
+              )}
+              {/* Error */}
+              {error && (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-6 text-red-600 text-sm">
+                  ❌ {error}
                 </div>
               )}
 
@@ -131,10 +128,15 @@ export function Contact() {
                 </div>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3.5 rounded-xl font-semibold transition-all w-full justify-center"
+                  disabled={submitting}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3.5 rounded-xl font-semibold transition-all w-full justify-center disabled:bg-gray-300"
                 >
-                  <Send className="w-4 h-4" />
-                  Send Message
+                  {submitting ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  {submitting ? "Sending..." : "Send Message"}
                 </button>
               </form>
             </div>

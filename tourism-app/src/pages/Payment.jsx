@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
-import { CreditCard, ChevronRight } from "lucide-react";
-import { trips } from "../data/mockData";
+import { CreditCard } from "lucide-react";
+import { bookingsAPI, paymentsAPI } from "../api";
 import { useAuth } from "../context/AuthContext";
 
 const paymentMethods = [
@@ -21,19 +21,20 @@ export function Payment() {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
-  const trip = trips.find((t) => t.id === Number(id));
   const travelers = Number(searchParams.get("travelers") || 1);
-  const totalPrice = Number(searchParams.get("total") || (trip?.price || 0));
+  const totalPrice = Number(searchParams.get("total") || 0);
+  const travelDate = searchParams.get("date") || "";
 
   const [method, setMethod] = useState("credit");
   const [card, setCard] = useState({ holder: "", number: "", expiry: "", cvv: "" });
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
 
-  if (!trip || !isLoggedIn) {
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Link to="/trips" className="bg-green-600 text-white px-6 py-2.5 rounded-xl">Browse Trips</Link>
+        <Link to="/login" className="bg-green-600 text-white px-6 py-2.5 rounded-xl">Login to Continue</Link>
       </div>
     );
   }
@@ -48,26 +49,48 @@ export function Payment() {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    setApiError("");
+
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
-      alert("Please fill in all card details correctly.");
       return;
     }
-    
+
     setProcessing(true);
-    setTimeout(() => {
+    try {
+      // 1. إنشاء الحجز
+      const response = await bookingsAPI.create({
+        trips_id: parseInt(id),
+        travel_date: travelDate,
+        travelers_count: travelers,
+        total_price: totalPrice,
+        status: "confirmed",
+      });
+
+      // 2. إنشاء الدفع
+      await paymentsAPI.create({
+        booking_id: response.booking.id,
+        amount: totalPrice,
+        payment_method: method,
+      });
+
+      // 3. التوجيه لصفحة النجاح
+      navigate(
+        `/booking-success?bookingId=BK-${response.booking.id}&tripId=${id}&travelers=${travelers}&total=${totalPrice}`
+      );
+    } catch (err) {
+      setApiError(err.message || "Payment failed. Please try again.");
+    } finally {
       setProcessing(false);
-      const bookingId = `BK-${Date.now()}`;
-      navigate(`/booking-success?bookingId=${bookingId}&tripId=${trip.id}&travelers=${travelers}&total=${totalPrice}`);
-    }, 1500);
+    }
   };
 
   return (
     <div className="bg-gray-50 min-h-screen pb-10">
-      <div className="bg-linear-to-r from-green-700 to-green-600 py-12 px-4 text-white">
+      <div className="bg-gradient-to-r from-green-700 to-green-600 py-12 px-4 text-white">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl font-bold">Secure Payment</h1>
         </div>
@@ -76,6 +99,14 @@ export function Payment() {
       <div className="max-w-5xl mx-auto px-4 py-10">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
+
+            {/* API Error */}
+            {apiError && (
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-red-600 text-sm">
+                {apiError}
+              </div>
+            )}
+
             {/* Payment Methods */}
             <div className="bg-white rounded-2xl border p-6">
               <h2 className="font-bold mb-4">Payment Method</h2>
@@ -94,7 +125,7 @@ export function Payment() {
               </div>
             </div>
 
-            {/* Card Details or PayPal */}
+            {/* Card Details */}
             <div className="bg-white rounded-2xl border p-6">
               <h2 className="font-bold mb-5 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-green-600" />
@@ -103,41 +134,68 @@ export function Payment() {
 
               {method === "paypal" ? (
                 <div className="text-center py-6">
-                  <p className="mb-4">Redirecting to PayPal secure gateway...</p>
-                  <button type="submit" disabled={processing} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">
-                    {processing ? "Redirecting..." : "Continue with PayPal"}
+                  <p className="mb-4 text-gray-500">You will be redirected to PayPal to complete your payment.</p>
+                  <button
+                    type="submit"
+                    disabled={processing}
+                    className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 disabled:bg-gray-300"
+                  >
+                    {processing ? "Processing..." : "Continue with PayPal"}
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <input
-                    value={card.holder}
-                    onChange={(e) => setCard({ ...card, holder: e.target.value })}
-                    placeholder="Cardholder Name"
-                    className="w-full border rounded-xl px-4 py-3"
-                  />
-                  <input
-                    value={card.number}
-                    onChange={(e) => setCard({ ...card, number: formatCardNumber(e.target.value) })}
-                    placeholder="0000 0000 0000 0000"
-                    className="w-full border rounded-xl px-4 py-3"
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <input
-                      value={card.expiry}
-                      onChange={(e) => setCard({ ...card, expiry: e.target.value })}
-                      placeholder="MM/YY"
-                      className="border rounded-xl px-4 py-3"
+                      value={card.holder}
+                      onChange={(e) => setCard({ ...card, holder: e.target.value })}
+                      placeholder="Cardholder Name"
+                      className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.holder ? "border-red-400" : "border-gray-200"}`}
                     />
-                    <input
-                      value={card.cvv}
-                      onChange={(e) => setCard({ ...card, cvv: e.target.value })}
-                      placeholder="CVV"
-                      className="border rounded-xl px-4 py-3"
-                    />
+                    {errors.holder && <p className="text-red-500 text-xs mt-1">{errors.holder}</p>}
                   </div>
-                  <button type="submit" disabled={processing} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold mt-4">
-                    {processing ? "Processing..." : `Confirm Payment - $${totalPrice}`}
+                  <div>
+                    <input
+                      value={card.number}
+                      onChange={(e) => setCard({ ...card, number: formatCardNumber(e.target.value) })}
+                      placeholder="0000 0000 0000 0000"
+                      className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.number ? "border-red-400" : "border-gray-200"}`}
+                    />
+                    {errors.number && <p className="text-red-500 text-xs mt-1">{errors.number}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <input
+                        value={card.expiry}
+                        onChange={(e) => setCard({ ...card, expiry: e.target.value })}
+                        placeholder="MM/YY"
+                        className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.expiry ? "border-red-400" : "border-gray-200"}`}
+                      />
+                      {errors.expiry && <p className="text-red-500 text-xs mt-1">{errors.expiry}</p>}
+                    </div>
+                    <div>
+                      <input
+                        value={card.cvv}
+                        onChange={(e) => setCard({ ...card, cvv: e.target.value })}
+                        placeholder="CVV"
+                        className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.cvv ? "border-red-400" : "border-gray-200"}`}
+                      />
+                      {errors.cvv && <p className="text-red-500 text-xs mt-1">{errors.cvv}</p>}
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={processing}
+                    className="w-full bg-green-600 text-white py-3 rounded-xl font-bold mt-4 hover:bg-green-700 disabled:bg-gray-300 flex items-center justify-center gap-2"
+                  >
+                    {processing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      `Confirm Payment - $${totalPrice}`
+                    )}
                   </button>
                 </div>
               )}

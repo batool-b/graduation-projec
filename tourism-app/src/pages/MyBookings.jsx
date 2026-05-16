@@ -1,42 +1,75 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom"; // تأكد من المسار الصحيح
+import { Link } from "react-router-dom";
 import { Plane, Calendar, MapPin, DollarSign, Eye, X, ChevronRight } from "lucide-react";
+import { bookingsAPI } from "../api";
 import { useAuth } from "../context/AuthContext";
 
 const statusConfig = {
-  Confirmed: { color: "bg-green-100 text-green-700 border-green-200", dot: "bg-green-500" },
-  Pending: { color: "bg-amber-100 text-amber-700 border-amber-200", dot: "bg-amber-500" },
-  Cancelled: { color: "bg-red-100 text-red-700 border-red-200", dot: "bg-red-500" },
-  Completed: { color: "bg-blue-100 text-blue-700 border-blue-200", dot: "bg-blue-500" },
+  confirmed: { color: "bg-green-100 text-green-700 border-green-200", dot: "bg-green-500", label: "Confirmed" },
+  pending:   { color: "bg-amber-100 text-amber-700 border-amber-200", dot: "bg-amber-500", label: "Pending" },
+  cancelled: { color: "bg-red-100 text-red-700 border-red-200",       dot: "bg-red-500",   label: "Cancelled" },
+  completed: { color: "bg-blue-100 text-blue-700 border-blue-200",    dot: "bg-blue-500",  label: "Completed" },
 };
+
+// ─── تحويل بيانات الباك للشكل اللي يفهمه الـ UI ─────────────────────────────
+function normalizeBooking(b) {
+  return {
+    id: b.id,
+    tripId: b.trips?.id,
+    tripTitle: b.trips?.title || "Unknown Trip",
+    destination: b.trips?.countries?.cname || "N/A",
+    image: b.trips?.trip_images?.[0]?.image_url || "/images/hero.png",
+    travelDate: b.travel_date?.slice(0, 10) || "—",
+    travelers: b.travelers_count,
+    totalPrice: parseFloat(b.total_price),
+    status: b.status?.toLowerCase() || "pending",
+  };
+}
 
 export function MyBookings() {
   const { user, isLoggedIn } = useAuth();
-  const navigate = useNavigate();
-  
-  const [bookings, setBookings] = useState([]); // تبدأ بمصفوفة فارغة
+
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("All");
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [cancellingId, setCancellingId] = useState(null);
 
-  // جلب الحجوزات من الداتابيس عند تحميل الصفحة
+  // ─── جلب الحجوزات من الباك ───────────────────────────────────────────────
   useEffect(() => {
-    if (isLoggedIn && user) {
-      // هنا نقوم باستدعاء الـ API الخاص بالحجوزات
-      // fetch(`/api/bookings?userId=${user.id}`)
-      
-      // للمثال الحالي، سنحاكي جلب البيانات مع تأخير بسيط
+    if (!isLoggedIn) return;
+    const fetchBookings = async () => {
       setLoading(true);
-      setTimeout(() => {
-        // افترض أن هذه البيانات قادمة من الداتابيس بناءً على user.id
-        // const data = await response.json();
-        // setBookings(data);
-        
-        // سأضع بيانات فارغة مؤقتاً لتعرف أنها مرتبطة بالـ state
+      setError("");
+      try {
+        const data = await bookingsAPI.getMyBookings();
+        setBookings(data.map(normalizeBooking));
+      } catch (err) {
+        setError("Failed to load bookings. Please try again.");
+      } finally {
         setLoading(false);
-      }, 800);
-    }
-  }, [isLoggedIn, user]);
+      }
+    };
+    fetchBookings();
+  }, [isLoggedIn]);
 
+  // ─── إلغاء حجز ───────────────────────────────────────────────────────────
+  const handleCancel = async (id) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    setCancellingId(id);
+    try {
+      await bookingsAPI.cancel(id);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b))
+      );
+    } catch (err) {
+      alert(err.message || "Failed to cancel booking.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  // ─── Login required ───────────────────────────────────────────────────────
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -52,34 +85,29 @@ export function MyBookings() {
     );
   }
 
-  const handleCancel = async (id) => {
-    // 1. استدعاء السيرفر لحذف أو إلغاء الحجز
-    // await fetch(`/api/bookings/${id}/cancel`, { method: 'POST' });
-    
-    // 2. تحديث الواجهة فوراً
-    setBookings(bookings.map((b) => b.id === id ? { ...b, status: "Cancelled" } : b));
-  };
+  const filtered =
+    filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
 
-  const filtered = filter === "All" ? bookings : bookings.filter((b) => b.status === filter);
-
+  // ─── UI ───────────────────────────────────────────────────────────────────
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-linear-to-r from-green-700 to-green-600 py-14 px-4 text-white">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-1">My Bookings</h1>
-          <p className="text-green-100">Welcome back, {user?.name}. Here are your travel plans.</p>
+          <p className="text-green-100">
+            Welcome back, {user?.first_name || user?.name}. Here are your travel plans.
+          </p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        
-        {/* أزرار التصفية */}
+        {/* Filter Buttons */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {["All", "Confirmed", "Pending", "Completed", "Cancelled"].map((status) => (
+          {["all", "confirmed", "pending", "completed", "cancelled"].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${
                 filter === status
                   ? "bg-green-600 text-white shadow-md"
                   : "bg-white text-gray-600 border border-gray-200 hover:border-green-400"
@@ -87,12 +115,22 @@ export function MyBookings() {
             >
               {status}
               <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${filter === status ? "bg-white/20" : "bg-gray-100"}`}>
-                {status === "All" ? bookings.length : bookings.filter((b) => b.status === status).length}
+                {status === "all"
+                  ? bookings.length
+                  : bookings.filter((b) => b.status === status).length}
               </span>
             </button>
           ))}
         </div>
 
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-red-600 text-sm mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* Loading */}
         {loading ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
@@ -102,7 +140,9 @@ export function MyBookings() {
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div className="text-5xl mb-4">📋</div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">No bookings found</h3>
-            <p className="text-gray-400 text-sm mb-5">You haven't made any {filter !== "All" ? filter.toLowerCase() : ""} trips yet</p>
+            <p className="text-gray-400 text-sm mb-5">
+              You haven't made any {filter !== "all" ? filter : ""} trips yet
+            </p>
             <Link to="/trips" className="bg-green-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-green-700">
               Find Your Next Adventure
             </Link>
@@ -110,18 +150,19 @@ export function MyBookings() {
         ) : (
           <div className="space-y-4">
             {filtered.map((booking) => {
-              const config = statusConfig[booking.status] || statusConfig.Pending;
+              const config = statusConfig[booking.status] || statusConfig.pending;
+              const isCancelling = cancellingId === booking.id;
               return (
                 <div key={booking.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all">
                   <div className="p-5">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                       <div>
                         <h3 className="font-bold text-gray-900 text-lg">{booking.tripTitle}</h3>
-                        <p className="text-xs text-gray-400 mt-0.5">Booking ID: {booking.id}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Booking ID: #{booking.id}</p>
                       </div>
                       <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium ${config.color} w-fit`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
-                        {booking.status}
+                        {config.label}
                       </div>
                     </div>
 
@@ -163,12 +204,18 @@ export function MyBookings() {
                       >
                         <Eye className="w-4 h-4" /> View Trip
                       </Link>
-                      {(booking.status === "Confirmed" || booking.status === "Pending") && (
+                      {(booking.status === "confirmed" || booking.status === "pending") && (
                         <button
                           onClick={() => handleCancel(booking.id)}
-                          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-600 border border-red-100 rounded-xl hover:bg-red-50 transition-all"
+                          disabled={isCancelling}
+                          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-600 border border-red-100 rounded-xl hover:bg-red-50 transition-all disabled:opacity-50"
                         >
-                          <X className="w-4 h-4" /> Cancel Booking
+                          {isCancelling ? (
+                            <div className="w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" />
+                          ) : (
+                            <X className="w-4 h-4" />
+                          )}
+                          {isCancelling ? "Cancelling..." : "Cancel Booking"}
                         </button>
                       )}
                     </div>

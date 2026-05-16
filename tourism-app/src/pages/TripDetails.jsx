@@ -1,25 +1,116 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   MapPin, Clock, Star, Plane, Hotel, Calendar,
   DollarSign, CheckCircle, Send, ArrowRight
 } from "lucide-react";
-import { trips } from "../data/mockData";
+import { tripsAPI, reviewsAPI } from "../api";
 import { TripCard, StarRating } from "../components/TripCard";
+import { useAuth } from "../context/AuthContext";
 
-const mockReviews = [
-  { id: 1, user: "Emma Wilson", rating: 5, comment: "Best trip ever! Everything was perfectly organized.", date: "2026-02-10" },
-  { id: 2, user: "Carlos Mendez", rating: 4, comment: "Amazing experience, beautiful scenery, highly recommend!", date: "2026-01-25" },
-  { id: 3, user: "Yuki Tanaka", rating: 5, comment: "Exceeded all expectations. The hotel was stunning.", date: "2026-01-15" },
-];
+// ─── نفس الـ normalizeTrip من Trips.jsx ───────────────────────────────────────
+function normalizeTrip(t) {
+  const firstImage = t.trip_images?.[0]?.image_url || "/images/hero.png";
+  return {
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    price: parseFloat(t.price),
+    duration: t.duration ? `${t.duration} Days` : "N/A",
+    rating: t.rating || 0,
+    reviewCount: t.review?.length || 0,
+    image: firstImage,
+    images: t.trip_images?.map((img) => img.image_url) || [firstImage],
+    country: t.countries?.cname || "N/A",
+    travelType: t.travel_types?.tname || "N/A",
+    availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],
+    includes: t.includes?.map((i) => i.hotels?.hotel_name).filter(Boolean) || [],
+    hotel: t.includes?.[0]?.hotels
+      ? { name: t.includes[0].hotels.hotel_name, stars: t.includes[0].hotels.stars, location: "" }
+      : null,
+    flight: t.uses?.[0]?.flights
+      ? { airline: t.uses[0].flights.airline, duration: `${t.uses[0].flights.duration} hrs`, departure: "", arrival: "" }
+      : null,
+    reviews: t.review || [],
+  };
+}
 
 export function TripDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const trip = trips.find((t) => t.id === Number(id));
-  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const { isLoggedIn } = useAuth();
 
-  if (!trip) {
+  // ─── State ──────────────────────────────────────────────────────────────────
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+
+  // ─── جلب الرحلة من الباك ──────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchTrip = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await tripsAPI.getById(id);
+        setTrip(normalizeTrip(data));
+      } catch (err) {
+        setError("Trip not found or server error.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrip();
+  }, [id]);
+
+  // ─── إرسال تقييم ───────────────────────────────────────────────────────────
+  const handleReviewSubmit = async () => {
+    if (!isLoggedIn) {
+      setReviewError("Please login to submit a review.");
+      return;
+    }
+    if (!reviewForm.comment.trim()) {
+      setReviewError("Please write a comment.");
+      return;
+    }
+    setReviewSubmitting(true);
+    setReviewError("");
+    try {
+      await reviewsAPI.create({
+        trips_id: parseInt(id),
+        rating: reviewForm.rating,
+        comment: reviewForm.comment,
+      });
+      setReviewSuccess(true);
+      setReviewForm({ rating: 5, comment: "" });
+      // إعادة تحميل الرحلة لعرض التقييم الجديد
+      const updated = await tripsAPI.getById(id);
+      setTrip(normalizeTrip(updated));
+      setTimeout(() => setReviewSuccess(false), 3000);
+    } catch (err) {
+      setReviewError(err.message || "Failed to submit review.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  // ─── Loading ────────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading trip details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Error ──────────────────────────────────────────────────────────────────
+  if (error || !trip) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -30,8 +121,7 @@ export function TripDetails() {
     );
   }
 
-  const similar = trips.filter((t) => t.id !== trip.id && (t.country === trip.country || t.travelType === trip.travelType)).slice(0, 3);
-
+  // ─── UI ─────────────────────────────────────────────────────────────────────
   return (
     <div className="bg-white">
       {/* Breadcrumb */}
@@ -49,12 +139,12 @@ export function TripDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT: Main content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Single Image */}
+            {/* Image */}
             <div className="rounded-2xl overflow-hidden">
               <img
                 src={trip.image}
                 alt={trip.title}
-                className="w-full h-80 sm:h-105 object-cover"
+                className="w-full h-80 sm:h-96 object-cover"
               />
             </div>
 
@@ -89,7 +179,9 @@ export function TripDetails() {
                 <div className="bg-gray-50 rounded-xl p-3 text-center">
                   <Calendar className="w-5 h-5 text-green-600 mx-auto mb-1" />
                   <p className="text-xs text-gray-500">Next Date</p>
-                  <p className="font-bold text-gray-900 text-xs">{trip.availableDates[0]}</p>
+                  <p className="font-bold text-gray-900 text-xs">
+                    {trip.availableDates[0] || "TBD"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -98,88 +190,112 @@ export function TripDetails() {
             <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-3">About This Trip</h2>
               <p className="text-gray-600 leading-relaxed">{trip.description}</p>
-              <h3 className="font-semibold text-gray-900 mt-5 mb-3">What's Included</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {trip.includes.map((item) => (
-                  <div key={item} className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-                    {item}
+              {trip.includes.length > 0 && (
+                <>
+                  <h3 className="font-semibold text-gray-900 mt-5 mb-3">What's Included</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {trip.includes.map((item) => (
+                      <div key={item} className="flex items-center gap-2 text-sm text-gray-600">
+                        <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                        {item}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
             </div>
 
             {/* Hotel Info */}
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-              <div className="p-5 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <Hotel className="w-5 h-5 text-green-600" /> Hotel Information
-                </h2>
-              </div>
-              <div className="flex flex-col sm:flex-row">
-                <img src={trip.hotel.image} alt={trip.hotel.name} className="sm:w-48 h-40 object-cover" />
+            {trip.hotel && (
+              <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-gray-100">
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Hotel className="w-5 h-5 text-green-600" /> Hotel Information
+                  </h2>
+                </div>
                 <div className="p-5">
                   <h3 className="font-bold text-gray-900 mb-1">{trip.hotel.name}</h3>
-                  <div className="flex items-center gap-0.5 mb-2">
-                    {Array.from({ length: trip.hotel.stars }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                    <MapPin className="w-4 h-4 text-green-600" />
-                    {trip.hotel.location}
-                  </div>
+                  {trip.hotel.stars > 0 && (
+                    <div className="flex items-center gap-0.5 mb-2">
+                      {Array.from({ length: trip.hotel.stars }).map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                  )}
+                  {trip.hotel.location && (
+                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                      <MapPin className="w-4 h-4 text-green-600" />
+                      {trip.hotel.location}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Flight Info */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Plane className="w-5 h-5 text-green-600" /> Flight Information
-              </h2>
-              <div className="bg-gray-50 rounded-xl p-5">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Airline</p>
-                    <p className="font-bold text-gray-900">{trip.flight.airline}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-bold text-gray-900">{trip.flight.departure}</p>
-                    <div className="flex items-center gap-2 my-1">
-                      <div className="h-px w-12 bg-gray-300" />
-                      <Plane className="w-4 h-4 text-green-600" />
-                      <div className="h-px w-12 bg-gray-300" />
+            {trip.flight && (
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Plane className="w-5 h-5 text-green-600" /> Flight Information
+                </h2>
+                <div className="bg-gray-50 rounded-xl p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Airline</p>
+                      <p className="font-bold text-gray-900">{trip.flight.airline}</p>
                     </div>
-                    <p className="font-bold text-gray-900">{trip.flight.arrival}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Duration</p>
-                    <p className="font-bold text-gray-900">{trip.flight.duration}</p>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Duration</p>
+                      <p className="font-bold text-gray-900">{trip.flight.duration}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Customer Reviews */}
+            {/* Reviews */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-5">Customer Reviews</h2>
-              <div className="space-y-4 mb-6">
-                {mockReviews.map((r) => (
-                  <div key={r.id} className="border-b border-gray-100 pb-4 last:border-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div>
-                        <span className="font-semibold text-gray-900 text-sm">{r.user}</span>
-                        <p className="text-xs text-gray-400">{r.date}</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-5">
+                Customer Reviews ({trip.reviews.length})
+              </h2>
+
+              {/* قائمة التقييمات */}
+              {trip.reviews.length === 0 ? (
+                <p className="text-gray-400 text-sm mb-6">No reviews yet. Be the first!</p>
+              ) : (
+                <div className="space-y-4 mb-6">
+                  {trip.reviews.map((r) => (
+                    <div key={r.id} className="border-b border-gray-100 pb-4 last:border-0">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div>
+                          <span className="font-semibold text-gray-900 text-sm">
+                            {r.users ? `${r.users.first_name} ${r.users.last_name}` : "Anonymous"}
+                          </span>
+                          <p className="text-xs text-gray-400">{r.created_at?.slice(0, 10)}</p>
+                        </div>
+                        <StarRating rating={r.rating} />
                       </div>
-                      <StarRating rating={r.rating} />
+                      <p className="text-gray-600 text-sm">{r.comment}</p>
                     </div>
-                    <p className="text-gray-600 text-sm">{r.comment}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+
+              {/* فورم التقييم */}
               <div className="bg-gray-50 rounded-xl p-5">
                 <h3 className="font-semibold text-gray-900 mb-4">Leave a Review</h3>
+
+                {reviewSuccess && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4 text-green-700 text-sm font-medium">
+                    ✅ Review submitted successfully!
+                  </div>
+                )}
+                {reviewError && (
+                  <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-4 text-red-600 text-sm">
+                    {reviewError}
+                  </div>
+                )}
+
                 <div className="mb-3">
                   <label className="text-xs font-medium text-gray-600 mb-1 block">Your Rating</label>
                   <div className="flex gap-1">
@@ -197,8 +313,17 @@ export function TripDetails() {
                   placeholder="Share your experience..."
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 resize-none mb-3"
                 />
-                <button className="flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-green-700 transition-all">
-                  <Send className="w-4 h-4" /> Submit Review
+                <button
+                  onClick={handleReviewSubmit}
+                  disabled={reviewSubmitting}
+                  className="flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-green-700 transition-all disabled:bg-gray-300"
+                >
+                  {reviewSubmitting ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  {reviewSubmitting ? "Submitting..." : "Submit Review"}
                 </button>
               </div>
             </div>
@@ -224,16 +349,20 @@ export function TripDetails() {
                   </div>
                 ))}
               </div>
-              <div className="mb-5">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available Dates</p>
-                <div className="flex flex-wrap gap-2">
-                  {trip.availableDates.map((date) => (
-                    <span key={date} className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-lg px-2.5 py-1">
-                      {date}
-                    </span>
-                  ))}
+
+              {trip.availableDates.length > 0 && (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available Dates</p>
+                  <div className="flex flex-wrap gap-2">
+                    {trip.availableDates.map((date) => (
+                      <span key={date} className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-lg px-2.5 py-1">
+                        {date}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
               <Link
                 to={`/booking/${trip.id}`}
                 className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-semibold transition-all"
@@ -249,16 +378,6 @@ export function TripDetails() {
             </div>
           </div>
         </div>
-
-        {/* Similar Trips */}
-        {similar.length > 0 && (
-          <div className="mt-14">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">You May Also Like</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {similar.map((t) => <TripCard key={t.id} trip={t} />)}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

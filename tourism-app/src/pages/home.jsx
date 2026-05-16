@@ -1,70 +1,88 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  Search,
-  MapPin,
-  Calendar,
-  DollarSign,
-  ChevronRight,
-  Plane,
-  Shield,
-  HeadphonesIcon,
-  Award,
+  Search, MapPin, Calendar, DollarSign, ChevronRight,
+  Plane, Shield, HeadphonesIcon, Award,
 } from "lucide-react";
-
-// استدعاء البيانات والمكونات
-import { trips, destinations, testimonials } from "../data/mockData";
+import { tripsAPI } from "../api";
 import { TripCard, StarRating } from "../components/TripCard";
+import { destinations, testimonials } from "../data/mockData";
 
 const HERO_IMAGE = "/images/hero.png";
 
+// ─── نفس الـ normalizeTrip من Trips.jsx ──────────────────────────────────────
+function normalizeTrip(t) {
+  const firstImage = t.trip_images?.[0]?.image_url || "/images/hero.png";
+  return {
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    price: parseFloat(t.price),
+    duration: t.duration ? `${t.duration} Days` : "N/A",
+    rating: t.rating || 0,
+    reviewCount: t.review?.length || 0,
+    image: firstImage,
+    country: t.countries?.cname || "N/A",
+    travelType: t.travel_types?.tname || "N/A",
+    availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],
+  };
+}
+
 export default function Home() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState({
-    destination: "",
-    travelType: "",
-    priceRange: "",
-    date: "",
-  });
+  const [search, setSearch] = useState({ destination: "", travelType: "", priceRange: "", date: "" });
+
+  // ─── Featured Trips من الباك ──────────────────────────────────────────────
+  const [featuredTrips, setFeaturedTrips] = useState([]);
+  const [tripsLoading, setTripsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const data = await tripsAPI.getAll();
+        setFeaturedTrips(data.slice(0, 6).map(normalizeTrip));
+      } catch {
+        // فشل التحميل — نخفي القسم بهدوء
+      } finally {
+        setTripsLoading(false);
+      }
+    };
+    fetchTrips();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (search.destination) params.set("destination", search.destination);
-    if (search.travelType) params.set("type", search.travelType);
-    if (search.priceRange) params.set("price", search.priceRange);
-    if (search.date) params.set("date", search.date);
+    if (search.travelType)  params.set("type", search.travelType);
+    if (search.priceRange)  params.set("price", search.priceRange);
+    if (search.date)        params.set("date", search.date);
     navigate(`/trips?${params.toString()}`);
   };
 
   return (
     <div className="flex flex-col text-left">
-      {/* ─── 1. قسم الـ Hero ─── */}
+      {/* ─── 1. Hero ─── */}
       <section
         className="relative min-h-[85vh] flex items-center justify-center"
-        style={{
-          backgroundImage: `url(${HERO_IMAGE})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        style={{ backgroundImage: `url(${HERO_IMAGE})`, backgroundSize: "cover", backgroundPosition: "center" }}
       >
-<div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/30 to-black/70" />        <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
+        <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/30 to-black/70" />
+        <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-full px-4 py-2 mb-6 text-sm font-medium border border-white/10">
             <Plane className="w-4 h-4 text-green-400" />
             <span>Trusted by 50,000+ travelers worldwide</span>
           </div>
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold mb-5 leading-tight tracking-tight">
             Explore the{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-green-400 to-emerald-300">
-                   World
-           </span>{" "}
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-green-400 to-emerald-300">World</span>{" "}
             With Us
           </h1>
           <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
             Find the best travel experiences around the globe. Handpicked destinations, expert guides, and memories that last a lifetime.
           </p>
 
-          {/* نموذج البحث الذكي */}
+          {/* Search Form */}
           <form onSubmit={handleSearch} className="bg-white rounded-2xl p-4 shadow-2xl max-w-5xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
               <div className="relative">
@@ -119,21 +137,20 @@ export default function Home() {
               type="submit"
               className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-green-200"
             >
-              <Search className="w-5 h-5" />
-              Find My Dream Trip
+              <Search className="w-5 h-5" /> Find My Dream Trip
             </button>
           </form>
         </div>
       </section>
 
-      {/* ─── 2. قسم الإحصائيات السريعة ─── */}
+      {/* ─── 2. Stats ─── */}
       <section className="bg-green-800 text-white py-10">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { label: "Happy Travelers", value: "5000+" },
-            { label: "Global Destinations", value: "120+" },
-            { label: "Certified Guides", value: "350+" },
-            { label: "Years Experience", value: "10+" },
+            { label: "Happy Travelers",      value: "5000+" },
+            { label: "Global Destinations",  value: "120+"  },
+            { label: "Certified Guides",     value: "350+"  },
+            { label: "Years Experience",     value: "10+"   },
           ].map((stat) => (
             <div key={stat.label}>
               <div className="text-3xl font-extrabold mb-1">{stat.value}</div>
@@ -143,28 +160,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 3. قسم الرحلات المقترحة ─── */}
+      {/* ─── 3. Featured Trips ─── */}
       <section className="py-20 px-4 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
             <span className="text-green-600 text-sm font-bold uppercase tracking-widest">Our Top Picks</span>
             <h2 className="text-4xl font-bold text-gray-900 mt-2">Recommended Journeys</h2>
           </div>
-          <Link
-            to="/trips"
-            className="inline-flex items-center gap-2 text-green-700 font-bold hover:gap-3 transition-all"
-          >
+          <Link to="/trips" className="inline-flex items-center gap-2 text-green-700 font-bold hover:gap-3 transition-all">
             View All Adventures <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {trips && trips.slice(0, 6).map((trip) => (
-            <TripCard key={trip.id} trip={trip} />
-          ))}
-        </div>
+
+        {tripsLoading ? (
+          <div className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          </div>
+        ) : featuredTrips.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredTrips.map((trip) => (
+              <TripCard key={trip.id} trip={trip} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 text-gray-400">No trips available right now.</div>
+        )}
       </section>
 
-      {/* ─── 4. قسم الوجهات الشهيرة ─── */}
+      {/* ─── 4. Popular Destinations ─── */}
       <section className="py-20 bg-gray-50 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -178,12 +201,9 @@ export default function Home() {
                 to={`/trips?destination=${dest.country}`}
                 className="group relative h-64 rounded-2xl overflow-hidden shadow-lg"
               >
-                <img
-                  src={dest.image}
-                  alt={dest.country}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-<div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />                <div className="absolute bottom-0 p-5">
+                <img src={dest.image} alt={dest.country} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 p-5">
                   <h3 className="text-white font-bold text-xl">{dest.country}</h3>
                   <p className="text-green-400 text-sm">{dest.tripCount} available trips</p>
                 </div>
@@ -193,17 +213,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 5. قسم لماذا تختارنا ─── */}
+      {/* ─── 5. Why Us ─── */}
       <section className="py-20 px-4 max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900">Why Travel with FarAway?</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
-            { icon: Shield, title: "Safe & Secure", desc: "Premium travel insurance and 24/7 on-ground support for your peace of mind.", color: "bg-green-100 text-green-600" },
-            { icon: DollarSign, title: "Best Value", desc: "No hidden fees. We provide high-quality experiences at the most competitive rates.", color: "bg-blue-100 text-blue-600" },
-            { icon: HeadphonesIcon, title: "Personalized Support", desc: "Our travel experts are just a call away to customize your perfect itinerary.", color: "bg-purple-100 text-purple-600" },
-            { icon: Award, title: "Expert Guides", desc: "Learn from the best. Our guides are local experts with years of storytelling experience.", color: "bg-amber-100 text-amber-600" },
+            { icon: Shield,         title: "Safe & Secure",        desc: "Premium travel insurance and 24/7 on-ground support for your peace of mind.",           color: "bg-green-100 text-green-600"  },
+            { icon: DollarSign,     title: "Best Value",           desc: "No hidden fees. We provide high-quality experiences at the most competitive rates.",      color: "bg-blue-100 text-blue-600"    },
+            { icon: HeadphonesIcon, title: "Personalized Support", desc: "Our travel experts are just a call away to customize your perfect itinerary.",           color: "bg-purple-100 text-purple-600" },
+            { icon: Award,          title: "Expert Guides",        desc: "Learn from the best. Our guides are local experts with years of storytelling experience.", color: "bg-amber-100 text-amber-600"  },
           ].map((item, idx) => (
             <div key={idx} className="p-8 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
               <div className={`w-16 h-16 ${item.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
@@ -216,7 +236,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 6. قسم آراء العملاء ─── */}
+      {/* ─── 6. Testimonials ─── */}
       <section className="py-20 bg-green-50/50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -240,7 +260,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── 7. قسم الـ CTA النهائي ─── */}
+      {/* ─── 7. CTA ─── */}
       <section className="py-24 bg-green-700 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
         <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
