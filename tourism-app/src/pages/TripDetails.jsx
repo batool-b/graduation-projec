@@ -9,8 +9,24 @@ import { TripCard, StarRating } from "../components/TripCard";
 import { useAuth } from "../context/AuthContext";
 
 // ─── نفس الـ normalizeTrip من Trips.jsx ───────────────────────────────────────
+const COUNTRY_IMAGES = {
+  "Thailand":     "/images/bankok.avif",
+  "France":       "/images/paris.jpg",
+  "Indonesia":    "/images/baliiii.jpg",
+  "Turkey":       "/images/istanbul.jpg",
+  "Egypt":        "/images/eqyptt.jpg",
+  "Switzerland":  "/images/swiss.jpg",
+  "Maldives":     "/images/maldives.jpg",
+  "Malaysia":     "/images/KualaLumpur.jpg.jpg",
+  "UAE":          "/images/dubai.jpg",
+  "Saudi Arabia": "/images/umrah.jpg.png",
+  "Germany":      "/images/german.jpg",
+  "Jordan":       "/images/jordan.jpg.jpg",
+};
+
 function normalizeTrip(t) {
-  const firstImage = t.trip_images?.[0]?.image_url || "/images/hero.png";
+  const countryName = t.countries?.cname || "";
+  const firstImage = COUNTRY_IMAGES[countryName] || "/images/hero.png";
   return {
     id: t.id,
     title: t.title,
@@ -20,7 +36,7 @@ function normalizeTrip(t) {
     rating: t.rating || 0,
     reviewCount: t.review?.length || 0,
     image: firstImage,
-    images: t.trip_images?.map((img) => img.image_url) || [firstImage],
+    images: [firstImage],
     country: t.countries?.cname || "N/A",
     travelType: t.travel_types?.tname || "N/A",
     availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],

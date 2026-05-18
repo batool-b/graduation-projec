@@ -13,7 +13,7 @@ import contactRoutes from "./routes/contact.routes.js";
 import countriesRoutes from "./routes/countries.routes.js";
 import travelTypesRoutes from "./routes/travelTypes.routes.js";
 import paymentsRoutes from "./routes/payments.routes.js";
-import adminRoutes from "./routes/admin.routes.js"; // ✅ جديد
+import adminRoutes from "./routes/admin.routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,7 +22,7 @@ const app = express();
 
 // ====================== MIDDLEWARE ======================
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "http://localhost:5174"],
   credentials: true,
 }));
 app.use(express.json());
@@ -40,7 +40,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/countries", countriesRoutes);
 app.use("/api/travel-types", travelTypesRoutes);
 app.use("/api/payments", paymentsRoutes);
-app.use("/api/admin", adminRoutes); // ✅ جديد
+app.use("/api/admin", adminRoutes);
 
 app.listen(3000, () => {
   console.log("🚀 Server running on http://localhost:3000");

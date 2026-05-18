@@ -16,8 +16,24 @@ const TRAVEL_TYPES = {
   9: "Heritage"
 };
 
+const COUNTRY_IMAGES = {
+  "Thailand":     "/images/bankok.avif",
+  "France":       "/images/paris.jpg",
+  "Indonesia":    "/images/baliiii.jpg",
+  "Turkey":       "/images/istanbul.jpg",
+  "Egypt":        "/images/eqyptt.jpg",
+  "Switzerland":  "/images/swiss.jpg",
+  "Maldives":     "/images/maldives.jpg",
+  "Malaysia":     "/images/KualaLumpur.jpg.jpg",
+  "UAE":          "/images/dubai.jpg",
+  "Saudi Arabia": "/images/umrah.jpg.png",
+  "Germany":      "/images/german.jpg",
+  "Jordan":       "/images/jordan.jpg.jpg",
+};
+
 function normalizeTrip(t) {
-  const firstImage = t.trip_images?.[0]?.image_url || "/images/hero.png";
+  const countryName = t.countries?.cname || COUNTRIES[t.countries_id] || "";
+  const firstImage = COUNTRY_IMAGES[countryName] || "/images/hero.png";
   return {
     id: t.id,
     title: t.title,
@@ -27,7 +43,7 @@ function normalizeTrip(t) {
     rating: t.rating || 0,
     reviewCount: t.review?.length || 0,
     image: firstImage,
-    country: COUNTRIES[t.countries_id] || "N/A",
+    country: countryName || "N/A",
     travelType: TRAVEL_TYPES[t.travel_types_id] || "N/A",
     availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],
     includes: [...new Set(t.includes?.map((i) => i.hotels?.hotel_name).filter(Boolean))] || [],
@@ -288,4 +304,3 @@ export function Trips() {
     </div>
   );
 }
-
