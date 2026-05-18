@@ -10,23 +10,22 @@ import { useAuth } from "../context/AuthContext";
 
 // ─── نفس الـ normalizeTrip من Trips.jsx ───────────────────────────────────────
 const COUNTRY_IMAGES = {
-  "Thailand":     "/images/bankok.avif",
-  "France":       "/images/paris.jpg",
-  "Indonesia":    "/images/baliiii.jpg",
-  "Turkey":       "/images/istanbul.jpg",
-  "Egypt":        "/images/eqyptt.jpg",
-  "Switzerland":  "/images/swiss.jpg",
-  "Maldives":     "/images/maldives.jpg",
-  "Malaysia":     "/images/KualaLumpur.jpg.jpg",
-  "UAE":          "/images/dubai.jpg",
-  "Saudi Arabia": "/images/umrah.jpg.png",
-  "Germany":      "/images/german.jpg",
-  "Jordan":       "/images/jordan.jpg.jpg",
+  1: "/images/bankok.avif",
+  2: "/images/paris.jpg",
+  3: "/images/baliiii.jpg",
+  4: "/images/istanbul.jpg",
+  5: "/images/eqyptt.jpg",
+  6: "/images/swiss.jpg",
+  7: "/images/maldives.jpg",
+  8: "/images/KualaLumpur.jpg.jpg",
+  9: "/images/dubai.jpg",
+  10: "/images/umrah.jpg.png",
+  11: "/images/german.jpg",
+  12: "/images/jordan.jpg.jpg",
 };
 
 function normalizeTrip(t) {
-  const countryName = t.countries?.cname || "";
-  const firstImage = COUNTRY_IMAGES[countryName] || "/images/hero.png";
+  const firstImage = COUNTRY_IMAGES[t.countries_id] || "/images/hero.png";
   return {
     id: t.id,
     title: t.title,

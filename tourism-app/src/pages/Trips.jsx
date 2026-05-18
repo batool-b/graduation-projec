@@ -32,7 +32,7 @@ const COUNTRY_IMAGES = {
 };
 
 function normalizeTrip(t) {
-  const countryName = t.countries?.cname || COUNTRIES[t.countries_id] || "";
+  const countryName = COUNTRIES[t.countries_id] || "";
   const firstImage = COUNTRY_IMAGES[countryName] || "/images/hero.png";
   return {
     id: t.id,

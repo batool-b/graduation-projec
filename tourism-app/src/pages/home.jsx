@@ -11,8 +11,23 @@ import { destinations, testimonials } from "../data/mockData";
 const HERO_IMAGE = "/images/hero.png";
 
 // ─── نفس الـ normalizeTrip من Trips.jsx ──────────────────────────────────────
+const COUNTRY_IMAGES = {
+  1: "/images/bankok.avif",
+  2: "/images/paris.jpg",
+  3: "/images/baliiii.jpg",
+  4: "/images/istanbul.jpg",
+  5: "/images/eqyptt.jpg",
+  6: "/images/swiss.jpg",
+  7: "/images/maldives.jpg",
+  8: "/images/KualaLumpur.jpg.jpg",
+  9: "/images/dubai.jpg",
+  10: "/images/umrah.jpg.png",
+  11: "/images/german.jpg",
+  12: "/images/jordan.jpg.jpg",
+};
+
 function normalizeTrip(t) {
-  const firstImage = t.trip_images?.[0]?.image_url || "/images/hero.png";
+  const firstImage = COUNTRY_IMAGES[t.countries_id] || "/images/hero.png";
   return {
     id: t.id,
     title: t.title,

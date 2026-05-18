@@ -18,7 +18,6 @@ export const getTrips = async (req, res) => {
         trip_dates: true,
         includes: { include: { hotels: true } },
         uses: { include: { flights: true } },
-        countries: true,
       },
     });
     res.json(trips);
