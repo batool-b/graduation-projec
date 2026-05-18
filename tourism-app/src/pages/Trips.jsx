@@ -288,3 +288,4 @@ export function Trips() {
     </div>
   );
 }
+
