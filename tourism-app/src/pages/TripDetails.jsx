@@ -209,8 +209,8 @@ export function TripDetails() {
                 <>
                   <h3 className="font-semibold text-gray-900 mt-5 mb-3">What's Included</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {trip.includes.map((item) => (
-                      <div key={item} className="flex items-center gap-2 text-sm text-gray-600">
+                    {trip.includes.map((item, idx) => (
+                      <div key={`${item}-${idx}`} className="flex items-center gap-2 text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
                         {item}
                       </div>

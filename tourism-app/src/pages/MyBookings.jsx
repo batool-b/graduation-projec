@@ -4,6 +4,21 @@ import { Plane, Calendar, MapPin, DollarSign, Eye, X, ChevronRight } from "lucid
 import { bookingsAPI } from "../api";
 import { useAuth } from "../context/AuthContext";
 
+const COUNTRY_IMAGES = {
+  1: "/images/bankok.avif",
+  2: "/images/paris.jpg",
+  3: "/images/baliiii.jpg",
+  4: "/images/istanbul.jpg",
+  5: "/images/eqyptt.jpg",
+  6: "/images/swiss.jpg",
+  7: "/images/maldives.jpg",
+  8: "/images/KualaLumpur.jpg.jpg",
+  9: "/images/dubai.jpg",
+  10: "/images/umrah.jpg.png",
+  11: "/images/german.jpg",
+  12: "/images/jordan.jpg.jpg",
+};
+
 const statusConfig = {
   confirmed: { color: "bg-green-100 text-green-700 border-green-200", dot: "bg-green-500", label: "Confirmed" },
   pending:   { color: "bg-amber-100 text-amber-700 border-amber-200", dot: "bg-amber-500", label: "Pending" },
@@ -18,7 +33,7 @@ function normalizeBooking(b) {
     tripId: b.trips?.id,
     tripTitle: b.trips?.title || "Unknown Trip",
     destination: b.trips?.countries?.cname || "N/A",
-    image: b.trips?.trip_images?.[0]?.image_url || "/images/hero.png",
+    image: COUNTRY_IMAGES[b.trips?.countries_id] || "/images/hero.png",
     travelDate: b.travel_date?.slice(0, 10) || "—",
     travelers: b.travelers_count,
     totalPrice: parseFloat(b.total_price),

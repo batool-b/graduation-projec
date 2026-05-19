@@ -1,6 +1,22 @@
 import { useSearchParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { CheckCircle, Download, Plane, Calendar, Users, DollarSign, Home } from "lucide-react";
-import { trips } from "../data/mockData";
+import { tripsAPI } from "../api";
+
+const COUNTRY_IMAGES = {
+  1: "/images/bankok.avif",
+  2: "/images/paris.jpg",
+  3: "/images/baliiii.jpg",
+  4: "/images/istanbul.jpg",
+  5: "/images/eqyptt.jpg",
+  6: "/images/swiss.jpg",
+  7: "/images/maldives.jpg",
+  8: "/images/KualaLumpur.jpg.jpg",
+  9: "/images/dubai.jpg",
+  10: "/images/umrah.jpg.png",
+  11: "/images/german.jpg",
+  12: "/images/jordan.jpg.jpg",
+};
 
 export function BookingSuccess() {
   const [searchParams] = useSearchParams();
@@ -8,7 +24,21 @@ export function BookingSuccess() {
   const tripId = Number(searchParams.get("tripId"));
   const travelers = Number(searchParams.get("travelers") || 1);
   const total = Number(searchParams.get("total") || 0);
-  const trip = trips.find((t) => t.id === tripId);
+
+  const [trip, setTrip] = useState(null);
+
+  useEffect(() => {
+    if (!tripId) return;
+    tripsAPI.getById(tripId).then((data) => {
+      setTrip({
+        title: data.title,
+        country: data.countries?.cname || "N/A",
+        duration: data.duration ? `${data.duration} Days` : "N/A",
+        travelType: data.travel_types?.tname || "N/A",
+        image: COUNTRY_IMAGES[data.countries_id] || "/images/hero.png",
+      });
+    }).catch(() => {});
+  }, [tripId]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">

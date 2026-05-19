@@ -30,18 +30,15 @@ export const getMyBookings = async (req, res) => {
   try {
     const bookings = await prisma.bookings.findMany({
       where: { user_id },
+      orderBy: { id: "desc" },
       include: {
-        trips: {
-          include: { 
-            trip_images: true,
-            countries: true,
-          },
-        },
+        trips: true,
       },
     });
     res.json(bookings);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("getMyBookings error:", err);
+    res.status(500).json({ error: err.message, stack: err.stack });
   }
 };
 
@@ -51,7 +48,6 @@ export const cancelBooking = async (req, res) => {
   const booking_id = parseInt(req.params.id);
 
   try {
-    // تأكد إن الحجز يخص المستخدم
     const booking = await prisma.bookings.findFirst({
       where: { id: booking_id, user_id },
     });
