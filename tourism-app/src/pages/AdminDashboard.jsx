@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router";
 import { Link } from "react-router";
 import {
   Users, Globe, BookOpen, DollarSign, TrendingUp, BarChart2,
@@ -113,7 +114,8 @@ function InputField({ label, value, onChange, type = "text", placeholder }) {
 
 export function AdminDashboard() {
   const { isLoggedIn, user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.tab || "overview");
   const [search, setSearch] = useState("");
 
   // Data states — overview يبدأ بالـ fallback مباشرة
@@ -268,8 +270,10 @@ export function AdminDashboard() {
     try {
       await adminAPI.deleteUser(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
+      // refresh bookings in case user had bookings shown in overview
+      if (activeTab === "bookings") await fetchBookings();
     } catch (err) {
-      alert(err.message);
+      alert("Cannot delete user: " + err.message);
     }
   };
 
@@ -296,7 +300,7 @@ export function AdminDashboard() {
       await adminAPI.deleteTrip(id);
       setTrips((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
-      alert(err.message);
+      alert("Cannot delete trip: " + err.message);
     }
   };
 
@@ -319,7 +323,7 @@ export function AdminDashboard() {
       await adminAPI.deleteBooking(id);
       setBookings((prev) => prev.filter((b) => b.id !== id));
     } catch (err) {
-      alert(err.message);
+      alert("Cannot delete booking: " + err.message);
     }
   };
 

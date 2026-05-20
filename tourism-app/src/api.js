@@ -1,7 +1,3 @@
-// =====================================================
-// api.js — نقطة التواصل الوحيدة مع الباك إند
-// =====================================================
-
 const BASE_URL = "http://localhost:3000/api";
 
 const getToken = () => localStorage.getItem("token");
@@ -63,7 +59,7 @@ export const authAPI = {
     }),
 };
 
-// ====================== TRIPS ======================
+//TRIPS
 export const tripsAPI = {
   getAll: (params = {}) => {
     const query = new URLSearchParams(params).toString();
@@ -73,7 +69,7 @@ export const tripsAPI = {
   getById: (id) => request(`/trips/${id}`),
 };
 
-// ====================== BOOKINGS ======================
+// BOOKINGS 
 export const bookingsAPI = {
   create: (bookingData) =>
     request("/bookings", {
@@ -87,7 +83,7 @@ export const bookingsAPI = {
     request(`/bookings/${id}/cancel`, { method: "PUT" }),
 };
 
-// ====================== PAYMENTS ======================
+// PAYMENTS 
 export const paymentsAPI = {
   create: (paymentData) =>
     request("/payments", {
@@ -96,7 +92,7 @@ export const paymentsAPI = {
     }),
 };
 
-// ====================== REVIEWS ======================
+//  REVIEWS 
 export const reviewsAPI = {
   create: (reviewData) =>
     request("/reviews", {
@@ -105,7 +101,7 @@ export const reviewsAPI = {
     }),
 };
 
-// ====================== CONTACT ======================
+// CONTACT
 export const contactAPI = {
   send: (data) =>
     request("/contact", {
@@ -114,7 +110,7 @@ export const contactAPI = {
     }),
 };
 
-// ====================== ADMIN ======================
+// ADMIN 
 export const adminAPI = {
   // Overview
   getOverview: () => request("/admin/overview"),

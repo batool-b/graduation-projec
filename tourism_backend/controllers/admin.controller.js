@@ -107,8 +107,23 @@ export const updateUser = async (req, res) => {
 };
 
 export const deleteUser = async (req, res) => {
+  const id = parseInt(req.params.id);
   try {
-    await prisma.users.delete({ where: { id: parseInt(req.params.id) } });
+    // 1. احذف reviews اليوزر
+    await prisma.review.deleteMany({ where: { user_id: id } });
+
+    // 2. احذف payments المرتبطة بحجوزاته
+    const userBookings = await prisma.bookings.findMany({ where: { user_id: id } });
+    for (const booking of userBookings) {
+      await prisma.payments.deleteMany({ where: { bookings_id: booking.id } });
+    }
+
+    // 3. احذف bookings
+    await prisma.bookings.deleteMany({ where: { user_id: id } });
+
+    // 4. احذف اليوزر
+    await prisma.users.delete({ where: { id } });
+
     res.json({ message: "User deleted successfully." });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -147,6 +162,7 @@ export const createTrip = async (req, res) => {
         duration: parseInt(duration),
         countries_id: parseInt(countries_id),
         travel_types_id: parseInt(travel_types_id),
+        created_at: new Date(),
       },
     });
     res.status(201).json({ message: "Trip created successfully.", trip });
@@ -176,8 +192,35 @@ export const updateTrip = async (req, res) => {
 };
 
 export const deleteTrip = async (req, res) => {
+  const id = parseInt(req.params.id);
   try {
-    await prisma.trips.delete({ where: { id: parseInt(req.params.id) } });
+    // 1. احذف reviews الرحلة
+    await prisma.review.deleteMany({ where: { trips_id: id } });
+
+    // 2. احذف trip_images
+    await prisma.trip_images.deleteMany({ where: { trips_id: id } });
+
+    // 3. احذف trip_dates
+    await prisma.trip_dates.deleteMany({ where: { trips_id: id } });
+
+    // 4. احذف includes (علاقة الرحلة بالفنادق)
+    await prisma.includes.deleteMany({ where: { trips_id: id } });
+
+    // 5. احذف uses (علاقة الرحلة بالرحلات الجوية)
+    await prisma.uses.deleteMany({ where: { trips_id: id } });
+
+    // 6. احذف payments المرتبطة بحجوزات هاي الرحلة
+    const tripBookings = await prisma.bookings.findMany({ where: { trips_id: id } });
+    for (const booking of tripBookings) {
+      await prisma.payments.deleteMany({ where: { bookings_id: booking.id } });
+    }
+
+    // 7. احذف bookings
+    await prisma.bookings.deleteMany({ where: { trips_id: id } });
+
+    // 8. احذف الرحلة
+    await prisma.trips.delete({ where: { id } });
+
     res.json({ message: "Trip deleted successfully." });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -218,8 +261,14 @@ export const updateBookingStatus = async (req, res) => {
 };
 
 export const deleteBooking = async (req, res) => {
+  const id = parseInt(req.params.id);
   try {
-    await prisma.bookings.delete({ where: { id: parseInt(req.params.id) } });
+    // 1. احذف payment أولاً
+    await prisma.payments.deleteMany({ where: { bookings_id: id } });
+
+    // 2. احذف الحجز
+    await prisma.bookings.delete({ where: { id } });
+
     res.json({ message: "Booking deleted successfully." });
   } catch (err) {
     res.status(500).json({ error: err.message });
