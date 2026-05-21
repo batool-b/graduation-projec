@@ -28,9 +28,9 @@ model contact_messages {
   message_name String   @db.VarChar(255)
   email        String   @db.VarChar(255)
   subject      String   @db.VarChar(255)
+  message      String   @db.Text        
   created_at   DateTime @db.DateTime(0)
 }
-
 model countries {
   id     Int     @id @default(autoincrement())
   cname  String  @unique(map: "cname") @db.VarChar(255)
