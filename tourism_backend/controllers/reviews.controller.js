@@ -1,6 +1,5 @@
 import { prisma } from "../prisma.js";
 
-// إضافة تقييم
 export const createReview = async (req, res) => {
   const { trips_id, rating, comment } = req.body;
   const user_id = req.user.id;
@@ -21,7 +20,6 @@ export const createReview = async (req, res) => {
   }
 };
 
-// جلب تقييمات رحلة
 export const getTripReviews = async (req, res) => {
   const trips_id = parseInt(req.params.id);
 

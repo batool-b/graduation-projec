@@ -118,25 +118,21 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState(location.state?.tab || "overview");
   const [search, setSearch] = useState("");
 
-  // Data states — overview يبدأ بالـ fallback مباشرة
   const [overview, setOverview] = useState(FALLBACK_OVERVIEW);
   const [users, setUsers] = useState(FALLBACK_USERS);
   const [trips, setTrips] = useState(FALLBACK_TRIPS);
   const [bookings, setBookings] = useState(FALLBACK_BOOKINGS);
   const [dataLoading, setDataLoading] = useState(false);
 
-  // Modal states
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // ====================== FETCH WITH FALLBACK ======================
-  // لما user يصير جاهز نحاول نجيب الداتا الحقيقية
   useEffect(() => {
     if (!isLoggedIn || !user?.is_admin) return;
     fetchOverview();
-    fetchBookings(); // عشان الـ pie chart في الـ overview يكون فيه داتا
+    fetchBookings(); 
   }, [user]);
 
   useEffect(() => {
@@ -149,7 +145,6 @@ export function AdminDashboard() {
   const fetchOverview = async () => {
     try {
       const data = await adminAPI.getOverview();
-      // دايمًا نأخذ أكبر قيمة بين الـ real data والـ fallback
       setOverview({
         users:    Math.max(data?.users    ?? 0, FALLBACK_OVERVIEW.users),
         trips:    Math.max(data?.trips    ?? 0, FALLBACK_OVERVIEW.trips),
@@ -166,7 +161,6 @@ export function AdminDashboard() {
     try {
       const data = await adminAPI.getUsers();
       if (data?.length) {
-        // نحط الـ real users أول ثم نضيف الـ fallback users اللي ما عندهم نفس الـ email
         const realEmails = new Set(data.map((u) => u.email));
         const realIds = new Set(data.map((u) => u.id));
         const maxRealId = Math.max(...data.map((u) => u.id));

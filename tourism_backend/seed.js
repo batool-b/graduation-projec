@@ -213,7 +213,6 @@ async function main() {
   }
   console.log(`✅ contact_messages: ${messages.length} rows`);
 
-  // admins
   const admins = [
     {
       first_name: "Eman",

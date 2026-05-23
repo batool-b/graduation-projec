@@ -1,7 +1,6 @@
 import { prisma } from "../prisma.js";
 import bcrypt from "bcrypt";
 
-// ====================== OVERVIEW ======================
 export const getOverview = async (req, res) => {
   try {
     const [usersCount, tripsCount, bookingsCount, revenueData] = await Promise.all([
@@ -22,7 +21,6 @@ export const getOverview = async (req, res) => {
   }
 };
 
-// ====================== USERS ======================
 export const getAllUsers = async (req, res) => {
   try {
     const users = await prisma.users.findMany({
@@ -130,7 +128,6 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// ====================== TRIPS ======================
 export const getAllTrips = async (req, res) => {
   try {
     const trips = await prisma.trips.findMany({
@@ -194,31 +191,23 @@ export const updateTrip = async (req, res) => {
 export const deleteTrip = async (req, res) => {
   const id = parseInt(req.params.id);
   try {
-    // 1. احذف reviews الرحلة
     await prisma.review.deleteMany({ where: { trips_id: id } });
 
-    // 2. احذف trip_images
     await prisma.trip_images.deleteMany({ where: { trips_id: id } });
 
-    // 3. احذف trip_dates
     await prisma.trip_dates.deleteMany({ where: { trips_id: id } });
 
-    // 4. احذف includes (علاقة الرحلة بالفنادق)
     await prisma.includes.deleteMany({ where: { trips_id: id } });
 
-    // 5. احذف uses (علاقة الرحلة بالرحلات الجوية)
     await prisma.uses.deleteMany({ where: { trips_id: id } });
 
-    // 6. احذف payments المرتبطة بحجوزات هاي الرحلة
     const tripBookings = await prisma.bookings.findMany({ where: { trips_id: id } });
     for (const booking of tripBookings) {
       await prisma.payments.deleteMany({ where: { bookings_id: booking.id } });
     }
 
-    // 7. احذف bookings
     await prisma.bookings.deleteMany({ where: { trips_id: id } });
 
-    // 8. احذف الرحلة
     await prisma.trips.delete({ where: { id } });
 
     res.json({ message: "Trip deleted successfully." });
@@ -227,7 +216,6 @@ export const deleteTrip = async (req, res) => {
   }
 };
 
-// ====================== BOOKINGS ======================
 export const getAllBookings = async (req, res) => {
   try {
     const bookings = await prisma.bookings.findMany({
@@ -263,10 +251,8 @@ export const updateBookingStatus = async (req, res) => {
 export const deleteBooking = async (req, res) => {
   const id = parseInt(req.params.id);
   try {
-    // 1. احذف payment أولاً
     await prisma.payments.deleteMany({ where: { bookings_id: id } });
 
-    // 2. احذف الحجز
     await prisma.bookings.delete({ where: { id } });
 
     res.json({ message: "Booking deleted successfully." });

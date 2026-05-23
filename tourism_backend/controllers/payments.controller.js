@@ -5,7 +5,6 @@ export const createPayment = async (req, res) => {
   const { booking_id, amount, payment_method } = req.body;
 
   try {
-    // تأكد إن الحجز يخص المستخدم
     const booking = await prisma.bookings.findFirst({
       where: { id: booking_id, user_id },
     });
@@ -22,18 +21,16 @@ export const createPayment = async (req, res) => {
       return res.status(400).json({ error: "Cannot pay for a cancelled booking." });
     }
 
-    // إنشاء الدفعة — بالأسماء الصح من الـ schema
     const payment = await prisma.payments.create({
       data: {
-        bookings_id: booking_id,      // ← صح
+        bookings_id: booking_id,      
         amount,
         payment_method,
-        payment_status: "completed",  // ← صح
-        created_at: new Date(),       // ← صح
+        payment_status: "completed",  
+        created_at: new Date(),       
       },
     });
 
-    // تحديث الحجز لـ confirmed
     await prisma.bookings.update({
       where: { id: booking_id },
       data: { status: "confirmed" },

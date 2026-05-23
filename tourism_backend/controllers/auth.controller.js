@@ -2,7 +2,6 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../prisma.js";
 
-// ====================== REGISTER ======================
 export const register = async (req, res) => {
   const { first_name, last_name, email, phone, password } = req.body;
 
@@ -55,7 +54,6 @@ export const register = async (req, res) => {
   }
 };
 
-// ====================== LOGIN ======================
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -124,7 +122,6 @@ export const login = async (req, res) => {
   }
 };
 
-// ====================== GET ME ======================
 export const getMe = async (req, res) => {
   try {
     if (req.user.role === "admin") {
@@ -142,7 +139,6 @@ export const getMe = async (req, res) => {
       });
       if (!admin) return res.status(404).json({ error: "Admin not found." });
 
-      // ✅ FIX: is_admin دايماً موجودة بالـ response
       return res.json({ ...admin, is_admin: true });
     }
 
@@ -166,7 +162,6 @@ export const getMe = async (req, res) => {
   }
 };
 
-// ====================== UPDATE PROFILE ======================
 export const updateProfile = async (req, res) => {
   const { first_name, last_name, phone, profile_image } = req.body;
   const updateData = {
@@ -217,7 +212,6 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-// ====================== CHANGE PASSWORD ======================
 export const changePassword = async (req, res) => {
   const { current_password, new_password } = req.body;
 

@@ -1,6 +1,5 @@
 import { prisma } from "../prisma.js";
 
-// إنشاء حجز جديد
 export const createBooking = async (req, res) => {
   const { trips_id, travel_date, travelers_count, total_price } = req.body;
   const user_id = req.user.id;
@@ -23,7 +22,6 @@ export const createBooking = async (req, res) => {
   }
 };
 
-// جلب حجوزات المستخدم
 export const getMyBookings = async (req, res) => {
   const user_id = req.user.id;
 
@@ -42,7 +40,6 @@ export const getMyBookings = async (req, res) => {
   }
 };
 
-// إلغاء حجز
 export const cancelBooking = async (req, res) => {
   const user_id = req.user.id;
   const booking_id = parseInt(req.params.id);

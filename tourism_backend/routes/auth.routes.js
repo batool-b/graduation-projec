@@ -12,8 +12,8 @@ const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.get("/me", verifyToken, getMe);              // ← ناقص
-router.put("/profile", verifyToken, updateProfile); // ← ناقص
-router.put("/change-password", verifyToken, changePassword); // ← ناقص
+router.get("/me", verifyToken, getMe);              
+router.put("/profile", verifyToken, updateProfile); 
+router.put("/change-password", verifyToken, changePassword); 
 
 export default router;
