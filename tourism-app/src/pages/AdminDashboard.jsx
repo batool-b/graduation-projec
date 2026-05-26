@@ -3,7 +3,7 @@ import { useLocation } from "react-router";
 import { Link } from "react-router";
 import {
   Users, Globe, BookOpen, DollarSign, TrendingUp, BarChart2,
-  Eye, Edit, Trash2, Plus, Search, ChevronRight, X, Check
+  Eye, Edit, Trash2, Plus, Search, ChevronRight, X, Check, Calendar
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -212,12 +212,22 @@ export function AdminDashboard() {
   const openViewUser = (u) => setModal({ type: "viewUser", data: u });
 
   const openAddTrip = () => {
-    setForm({ title: "", description: "", price: "", duration: "", countries_id: "", travel_types_id: "" });
+    setForm({ title: "", description: "", price: "", duration: "", countries_id: "", travel_types_id: "", trip_dates: [], newDate: "" });
     setError("");
     setModal({ type: "addTrip" });
   };
 
-  const openEditTrip = (t) => {
+  const openEditTrip = async (t) => {
+    setError("");
+    // fetch fresh trip data from DB to get real trip_dates with correct ids
+    let tripDates = [];
+    try {
+      const freshTrips = await adminAPI.getTrips();
+      const freshTrip = freshTrips.find((ft) => ft.id === t.id);
+      tripDates = freshTrip?.trip_dates ? freshTrip.trip_dates.map((d) => ({ ...d })) : [];
+    } catch {
+      tripDates = t.trip_dates ? t.trip_dates.map((d) => ({ ...d })) : [];
+    }
     setForm({
       title: t.title,
       description: t.description,
@@ -225,8 +235,9 @@ export function AdminDashboard() {
       duration: t.duration,
       countries_id: t.countries_id,
       travel_types_id: t.travel_types_id,
+      trip_dates: tripDates,
+      newDate: "",
     });
-    setError("");
     setModal({ type: "editTrip", data: t });
   };
 
@@ -272,16 +283,68 @@ export function AdminDashboard() {
     setSaving(true);
     setError("");
     try {
+      let tripId;
       if (modal.type === "addTrip") {
-        await adminAPI.createTrip(form);
+        const res = await adminAPI.createTrip(form);
+        tripId = res.trip?.id;
       } else {
         await adminAPI.updateTrip(modal.data.id, form);
+        tripId = modal.data.id;
       }
+
+
+      // Add new date if entered
+      if (form.newDate && tripId) {
+        await adminAPI.createTripDate({
+          trips_id: tripId,
+          available_date: form.newDate,
+        });
+      }
+
       await fetchTrips();
-      await fetchOverview(); // ✅ تحديث الـ overview بعد إضافة/تعديل تريب
+      await fetchOverview();
       closeModal();
     } catch (err) {
       setError(err.message);
+    }
+    setSaving(false);
+  };
+
+  const handleDeleteTripDate = async (dateId) => {
+    // if no real DB id, just remove from local state
+    if (!dateId) {
+      setForm((prev) => ({
+        ...prev,
+        trip_dates: prev.trip_dates.filter((d) => d._localId !== dateId && d.id !== dateId),
+      }));
+      return;
+    }
+    try {
+      await adminAPI.deleteTripDate(dateId);
+      setForm((prev) => ({
+        ...prev,
+        trip_dates: prev.trip_dates.filter((d) => d.id !== dateId),
+      }));
+    } catch (err) {
+      setError("Failed to delete date: " + err.message);
+    }
+  };
+
+  const handleAddTripDate = async () => {
+    if (!form.newDate) return;
+    setSaving(true);
+    try {
+      const res = await adminAPI.createTripDate({
+        trips_id: modal.data.id,
+        available_date: form.newDate,
+      });
+      setForm((prev) => ({
+        ...prev,
+        trip_dates: [...(prev.trip_dates || []), res.tripDate],
+        newDate: "",
+      }));
+    } catch (err) {
+      setError("Failed to add date: " + err.message);
     }
     setSaving(false);
   };
@@ -428,7 +491,7 @@ export function AdminDashboard() {
 
       {(modal?.type === "addTrip" || modal?.type === "editTrip") && (
         <Modal title={modal.type === "addTrip" ? "Add Trip" : "Edit Trip"} onClose={closeModal}>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
             <InputField label="Title"       value={form.title}       onChange={(e) => setForm({ ...form, title: e.target.value })} />
             <InputField label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             <div className="grid grid-cols-2 gap-3">
@@ -439,6 +502,70 @@ export function AdminDashboard() {
               <InputField label="Country ID"     type="number" value={form.countries_id}    onChange={(e) => setForm({ ...form, countries_id: e.target.value })} />
               <InputField label="Travel Type ID" type="number" value={form.travel_types_id} onChange={(e) => setForm({ ...form, travel_types_id: e.target.value })} />
             </div>
+
+            {/* ── Trip Dates Management ── */}
+            <div className="border border-gray-200 rounded-xl p-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" /> Available Dates
+              </p>
+
+              {/* Existing dates */}
+              {(form.trip_dates || []).length > 0 ? (
+                <div className="space-y-1.5 mb-3">
+                  {form.trip_dates.map((d, idx) => (
+                    <div key={d.id ?? `local-${idx}`} className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
+                      <span className="text-xs text-green-800 font-medium">
+                        {d.available_date?.slice(0, 10) || d.start_date?.slice(0, 10)}
+                      </span>
+                      <button
+                        onClick={() => d.id ? handleDeleteTripDate(d.id) : setForm(prev => ({ ...prev, trip_dates: prev.trip_dates.filter((_, i) => i !== idx) }))}
+                        className="text-red-400 hover:text-red-600 p-0.5 rounded"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 mb-3">No dates added yet.</p>
+              )}
+
+              {/* Add new date */}
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={form.newDate || ""}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setForm({ ...form, newDate: e.target.value })}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-green-400"
+                />
+                {modal.type === "editTrip" ? (
+                  <button
+                    onClick={handleAddTripDate}
+                    disabled={saving || !form.newDate}
+                    className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (!form.newDate) return;
+                      setForm((prev) => ({
+                        ...prev,
+                        trip_dates: [...(prev.trip_dates || []), { id: null, available_date: form.newDate }],
+                        newDate: "",
+                      }));
+                    }}
+                    disabled={!form.newDate}
+                    className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add
+                  </button>
+                )}
+              </div>
+            </div>
+
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               onClick={handleSaveTrip}
