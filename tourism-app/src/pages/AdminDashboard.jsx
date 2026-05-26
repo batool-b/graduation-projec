@@ -21,6 +21,22 @@ import {
   bookingsPerMonth as mockBookingsPerMonth,
 } from "../data/mockData";
 
+// ====================== COUNTRY IMAGES MAP ======================
+const COUNTRY_IMAGES = {
+  1: "/images/bankok.avif",
+  2: "/images/paris.jpg",
+  3: "/images/baliiii.jpg",
+  4: "/images/istanbul.jpg",
+  5: "/images/eqyptt.jpg",
+  6: "/images/swiss.jpg",
+  7: "/images/maldives.jpg",
+  8: "/images/KualaLumpur.jpg.jpg",
+  9: "/images/dubai.jpg",
+  10: "/images/umrah.jpg.png",
+  11: "/images/german.jpg",
+  12: "/images/jordan.jpg.jpg",
+};
+
 // ====================== TRANSFORM MOCK DATA TO API SHAPE ======================
 const FALLBACK_OVERVIEW = {
   users: adminStats.totalUsers,
@@ -839,13 +855,12 @@ export function AdminDashboard() {
                         <td className="py-3 px-2 font-mono text-xs text-gray-400">#{t.id}</td>
                         <td className="py-3 px-2">
                           <div className="flex items-center gap-2">
-                            {t.trip_images?.[0] && (
-                              <img
-                                src={t.trip_images[0].image_url}
-                                alt={t.title}
-                                className="w-8 h-8 rounded-lg object-cover shrink-0"
-                              />
-                            )}
+                            <img
+                              src={COUNTRY_IMAGES[t.countries_id] || "/images/hero.png"}
+                              alt={t.title}
+                              className="w-8 h-8 rounded-lg object-cover shrink-0"
+                              onError={(e) => { e.target.src = "/images/hero.png"; }}
+                            />
                             <span className="font-medium text-gray-900 truncate max-w-[120px]">{t.title}</span>
                           </div>
                         </td>
