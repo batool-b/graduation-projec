@@ -18,15 +18,6 @@ export const createReview = async (req, res) => {
       return res.status(403).json({ error: "You can only review trips you have booked." });
     }
 
-    // تحقق إن اليوزر ما عمل ريفيو مسبقاً على نفس الرحلة
-    const existing = await prisma.review.findFirst({
-      where: { user_id, trips_id: parseInt(trips_id) },
-    });
-
-    if (existing) {
-      return res.status(400).json({ error: "You have already reviewed this trip." });
-    }
-
     const review = await prisma.review.create({
       data: {
         user_id,
