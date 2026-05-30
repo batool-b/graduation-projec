@@ -22,6 +22,14 @@ const COUNTRY_IMAGES = {
 
 function normalizeTrip(t) {
   const firstImage = COUNTRY_IMAGES[t.countries_id] || "/images/hero.png";
+
+  // ✅ فلتر التواريخ القديمة — ما تعرض إلا المستقبلية أو اليوم
+  const today = new Date().toISOString().slice(0, 10);
+  const futureDates =
+    t.trip_dates
+      ?.map((d) => d.available_date?.slice(0, 10))
+      .filter((d) => d >= today) || [];
+
   return {
     id: t.id,
     title: t.title,
@@ -30,7 +38,7 @@ function normalizeTrip(t) {
     image: firstImage,
     country: t.countries?.cname || "N/A",
     travelType: t.travel_types?.tname || "N/A",
-    availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],
+    availableDates: futureDates, // ✅ بس التواريخ المستقبلية
   };
 }
 
@@ -111,7 +119,15 @@ export function Booking() {
 
   const validate = () => {
     const newErrors = {};
-    if (!form.date) newErrors.date = "Please select a travel date";
+    if (!form.date) {
+      newErrors.date = "Please select a travel date";
+    } else {
+      // ✅ تأكيد إضافي — منع التاريخ القديم حتى لو تجاوز الـ dropdown
+      const today = new Date().toISOString().slice(0, 10);
+      if (form.date < today) {
+        newErrors.date = "Cannot select a past date";
+      }
+    }
     if (form.travelers < 1) newErrors.travelers = "At least 1 traveler required";
     return newErrors;
   };
@@ -194,11 +210,15 @@ export function Booking() {
                     }`}
                   >
                     <option value="">Select a date</option>
-                    {trip.availableDates.map((date) => (
-                      <option key={date} value={date}>
-                        {date}
-                      </option>
-                    ))}
+                    {trip.availableDates.length === 0 ? (
+                      <option disabled>No available dates</option>
+                    ) : (
+                      trip.availableDates.map((date) => (
+                        <option key={date} value={date}>
+                          {date}
+                        </option>
+                      ))
+                    )}
                   </select>
                   {errors.date && (
                     <p className="text-red-500 text-xs mt-1">{errors.date}</p>

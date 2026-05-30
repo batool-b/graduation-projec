@@ -119,7 +119,7 @@ export const deleteUser = async (req, res) => {
     // 3. احذف bookings
     await prisma.bookings.deleteMany({ where: { user_id: id } });
 
-    // 4. احذف اليوزر
+  // 4. احذف اليوزر
     await prisma.users.delete({ where: { id } });
 
     res.json({ message: "User deleted successfully." });
@@ -211,6 +211,60 @@ export const deleteTrip = async (req, res) => {
     await prisma.trips.delete({ where: { id } });
 
     res.json({ message: "Trip deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+// ====================== TRIP DATES ======================
+
+// Create Trip Date
+export const createTripDate = async (req, res) => {
+  const { trips_id, start_date, available_date } = req.body;
+  const dateValue = available_date || start_date;
+
+  if (!trips_id || !dateValue)
+    return res.status(400).json({ error: "trips_id and date are required." });
+
+  try {
+    const tripDate = await prisma.trip_dates.create({
+      data: {
+        trips_id: parseInt(trips_id),
+        available_date: new Date(dateValue),
+      },
+    });
+    res.status(201).json({ message: "Trip date created successfully.", tripDate });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Update Trip Date
+export const updateTripDate = async (req, res) => {
+  const { start_date, available_date } = req.body;
+  const dateValue = available_date || start_date;
+
+  try {
+    const tripDate = await prisma.trip_dates.update({
+      where: { id: parseInt(req.params.id) },
+      data: {
+        ...(dateValue && { available_date: new Date(dateValue) }),
+      },
+    });
+    res.json({ message: "Trip date updated successfully.", tripDate });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete Trip Date
+export const deleteTripDate = async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (!id || isNaN(id)) return res.status(400).json({ error: "Invalid id." });
+  try {
+    const existing = await prisma.trip_dates.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: "Trip date not found." });
+    await prisma.trip_dates.delete({ where: { id } });
+    res.json({ message: "Trip date deleted successfully." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

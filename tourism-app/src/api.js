@@ -146,6 +146,20 @@ export const adminAPI = {
   deleteTrip: (id) =>
     request(`/admin/trips/${id}`, { method: "DELETE" }),
 
+  // Trip Dates
+  createTripDate: (data) =>
+    request("/admin/trip-dates", {
+      method: "POST",
+      body: JSON.stringify({ trips_id: data.trips_id, available_date: data.start_date || data.available_date }),
+    }),
+  updateTripDate: (id, data) =>
+    request(`/admin/trip-dates/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ available_date: data.start_date || data.available_date }),
+    }),
+  deleteTripDate: (id) =>
+    request(`/admin/trip-dates/${id}`, { method: "DELETE" }),
+
   // Bookings
   getBookings: () => request("/admin/bookings"),
   updateBookingStatus: (id, status) =>

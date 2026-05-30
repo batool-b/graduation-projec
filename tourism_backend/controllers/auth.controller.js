@@ -31,7 +31,7 @@ export const register = async (req, res) => {
     });
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: "user" },
+      { id: user.id, email: user.email, role: "user", first_name: user.first_name, last_name: user.last_name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -70,7 +70,7 @@ export const login = async (req, res) => {
       }
 
       const token = jwt.sign(
-        { id: admin.id, email: admin.email, role: "admin" },
+        { id: admin.id, email: admin.email, role: "admin", first_name: admin.first_name, last_name: admin.last_name },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
@@ -100,7 +100,7 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: "user" },
+      { id: user.id, email: user.email, role: "user", first_name: user.first_name, last_name: user.last_name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );

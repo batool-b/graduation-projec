@@ -38,7 +38,14 @@ function normalizeTrip(t) {
     images: [firstImage],
     country: t.countries?.cname || "N/A",
     travelType: t.travel_types?.tname || "N/A",
-    availableDates: t.trip_dates?.map((d) => d.available_date?.slice(0, 10)) || [],
+    availableDates: t.trip_dates
+      ?.filter((d) => {
+        const dateStr = d.available_date || d.start_date;
+        if (!dateStr) return false;
+        return new Date(dateStr) >= new Date(new Date().toDateString());
+      })
+      .map((d) => (d.available_date || d.start_date)?.slice(0, 10))
+      .sort() || [],
     includes: t.includes?.map((i) => i.hotels?.hotel_name).filter(Boolean) || [],
     hotel: t.includes?.[0]?.hotels
       ? { name: t.includes[0].hotels.hotel_name, stars: t.includes[0].hotels.stars, location: "" }
@@ -195,7 +202,7 @@ export function TripDetails() {
                   <Calendar className="w-5 h-5 text-green-600 mx-auto mb-1" />
                   <p className="text-xs text-gray-500">Next Date</p>
                   <p className="font-bold text-gray-900 text-xs">
-                    {trip.availableDates[0] || "TBD"}
+                    {trip.availableDates[0] || "No upcoming dates"}
                   </p>
                 </div>
               </div>
@@ -284,7 +291,11 @@ export function TripDetails() {
                       <div className="flex items-center justify-between mb-1.5">
                         <div>
                           <span className="font-semibold text-gray-900 text-sm">
-                            {r.users ? `${r.users.first_name} ${r.users.last_name}` : "Anonymous"}
+                            {r.reviewer_name
+                              ? r.reviewer_name
+                              : r.users
+                              ? `${r.users.first_name} ${r.users.last_name}`
+                              : "Anonymous"}
                           </span>
                           <p className="text-xs text-gray-400">{r.created_at?.slice(0, 10)}</p>
                         </div>
@@ -365,7 +376,7 @@ export function TripDetails() {
                 ))}
               </div>
 
-              {trip.availableDates.length > 0 && (
+              {trip.availableDates.length > 0 ? (
                 <div className="mb-5">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available Dates</p>
                   <div className="flex flex-wrap gap-2">
@@ -375,6 +386,11 @@ export function TripDetails() {
                       </span>
                     ))}
                   </div>
+                </div>
+              ) : (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available Dates</p>
+                  <p className="text-xs text-gray-400 italic">No upcoming dates available.</p>
                 </div>
               )}
 

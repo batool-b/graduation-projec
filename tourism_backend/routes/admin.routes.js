@@ -4,7 +4,8 @@ import {
   getOverview,
   getAllUsers, getUserById, createUser, updateUser, deleteUser,
   getAllTrips, createTrip, updateTrip, deleteTrip,
-  getAllBookings, updateBookingStatus, deleteBooking,
+  getAllBookings, updateBookingStatus, deleteBooking,createTripDate,
+  updateTripDate, deleteTripDate,
 } from "../controllers/admin.controller.js";
 
 const router = express.Router();
@@ -29,6 +30,9 @@ router.get("/trips", getAllTrips);
 router.post("/trips", createTrip);
 router.put("/trips/:id", updateTrip);
 router.delete("/trips/:id", deleteTrip);
+router.post("/trip-dates", createTripDate);
+router.put("/trip-dates/:id", updateTripDate);
+router.delete("/trip-dates/:id", deleteTripDate);
 
 router.get("/bookings", getAllBookings);
 router.put("/bookings/:id/status", updateBookingStatus);
