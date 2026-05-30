@@ -15,6 +15,7 @@ export function Navbar() {
   const navLinks = [
     { label: "Home", path: "/" },
     { label: "Trips", path: "/trips" },
+    { label: "AI Recommendations", path: "/ai-recommendations" },
     { label: "About Us", path: "/about" },
     { label: "Contact", path: "/contact" },
   ];

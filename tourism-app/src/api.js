@@ -69,6 +69,17 @@ export const tripsAPI = {
   getById: (id) => request(`/trips/${id}`),
 };
 
+// AI RECOMMENDATIONS
+export const recommendationsAPI = {
+  getPersonalized: (preferences) =>
+    request("/recommendations/ai", {
+      method: "POST",
+      body: JSON.stringify(preferences),
+    }),
+
+  getPreferences: (userId) => request(`/recommendations/preferences/${userId}`),
+};
+
 // BOOKINGS 
 export const bookingsAPI = {
   create: (bookingData) =>

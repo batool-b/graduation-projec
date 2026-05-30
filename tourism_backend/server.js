@@ -19,6 +19,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const rateLimitStore = new Map();
+
+const rateLimit = ({ windowMs = 15 * 60 * 1000, max = 150 } = {}) => {
+  return (req, res, next) => {
+    const key = req.ip || req.headers["x-forwarded-for"] || "unknown";
+    const now = Date.now();
+    const current = rateLimitStore.get(key);
+
+    if (!current || current.resetAt <= now) {
+      rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+
+    current.count += 1;
+    if (current.count > max) {
+      return res.status(429).json({
+        error: "Too many requests. Please try again later.",
+      });
+    }
+
+    return next();
+  };
+};
 
 // ====================== MIDDLEWARE ======================
 app.use(cors({
@@ -26,6 +49,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use("/api", rateLimit());
 
 // ====================== STATIC FILES ======================
 app.use("/images", express.static(path.join(__dirname, "../tourism-app/public/images")));

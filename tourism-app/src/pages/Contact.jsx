@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from "lucide-react";
+import { AlertCircle, MapPin, Phone, Mail, Clock, Send, CheckCircle } from "lucide-react";
 import { contactAPI } from "../api";
 
 export function Contact() {
@@ -76,8 +76,9 @@ export function Contact() {
               )}
               {/* Error */}
               {error && (
-                <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-6 text-red-600 text-sm">
-                  ❌ {error}
+                <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-xl p-4 mb-6 text-red-600 text-sm">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
 

@@ -119,7 +119,7 @@ export const deleteUser = async (req, res) => {
     // 3. احذف bookings
     await prisma.bookings.deleteMany({ where: { user_id: id } });
 
-    // 4. احذف اليوزر
+  // 4. احذف اليوزر
     await prisma.users.delete({ where: { id } });
 
     res.json({ message: "User deleted successfully." });

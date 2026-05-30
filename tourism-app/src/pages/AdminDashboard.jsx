@@ -129,10 +129,11 @@ export function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // ====================== FETCH WITH FALLBACK ======================
   useEffect(() => {
     if (!isLoggedIn || !user?.is_admin) return;
     fetchOverview();
-    fetchBookings(); 
+    fetchBookings();
   }, [user]);
 
   useEffect(() => {
@@ -145,12 +146,7 @@ export function AdminDashboard() {
   const fetchOverview = async () => {
     try {
       const data = await adminAPI.getOverview();
-      setOverview({
-        users:    Math.max(data?.users    ?? 0, FALLBACK_OVERVIEW.users),
-        trips:    Math.max(data?.trips    ?? 0, FALLBACK_OVERVIEW.trips),
-        bookings: Math.max(data?.bookings ?? 0, FALLBACK_OVERVIEW.bookings),
-        revenue:  Math.max(data?.revenue  ?? 0, FALLBACK_OVERVIEW.revenue),
-      });
+      setOverview(data);
     } catch {
       setOverview(FALLBACK_OVERVIEW);
     }
@@ -162,7 +158,6 @@ export function AdminDashboard() {
       const data = await adminAPI.getUsers();
       if (data?.length) {
         const realEmails = new Set(data.map((u) => u.email));
-        const realIds = new Set(data.map((u) => u.id));
         const maxRealId = Math.max(...data.map((u) => u.id));
         const extraFallback = FALLBACK_USERS
           .filter((u) => !realEmails.has(u.email))
@@ -252,6 +247,7 @@ export function AdminDashboard() {
         await adminAPI.updateUser(modal.data.id, form);
       }
       await fetchUsers();
+      await fetchOverview(); // ✅ تحديث الـ overview بعد إضافة/تعديل يوزر
       closeModal();
     } catch (err) {
       setError(err.message);
@@ -264,8 +260,7 @@ export function AdminDashboard() {
     try {
       await adminAPI.deleteUser(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
-      // refresh bookings in case user had bookings shown in overview
-      if (activeTab === "bookings") await fetchBookings();
+      await fetchOverview(); // ✅ تحديث الـ KPI cards والرسومات بعد الحذف
     } catch (err) {
       alert("Cannot delete user: " + err.message);
     }
@@ -281,6 +276,7 @@ export function AdminDashboard() {
         await adminAPI.updateTrip(modal.data.id, form);
       }
       await fetchTrips();
+      await fetchOverview(); // ✅ تحديث الـ overview بعد إضافة/تعديل تريب
       closeModal();
     } catch (err) {
       setError(err.message);
@@ -293,6 +289,7 @@ export function AdminDashboard() {
     try {
       await adminAPI.deleteTrip(id);
       setTrips((prev) => prev.filter((t) => t.id !== id));
+      await fetchOverview(); // ✅ تحديث الـ KPI cards بعد حذف تريب
     } catch (err) {
       alert("Cannot delete trip: " + err.message);
     }
@@ -303,7 +300,8 @@ export function AdminDashboard() {
     setError("");
     try {
       await adminAPI.updateBookingStatus(modal.data.id, form.status);
-      await fetchBookings();
+      await fetchBookings(); // يحدث bookings state → pieData يتحدث تلقائياً
+      await fetchOverview(); // ✅ تحديث الـ KPI cards بعد تغيير status
       closeModal();
     } catch (err) {
       setError(err.message);
@@ -316,6 +314,7 @@ export function AdminDashboard() {
     try {
       await adminAPI.deleteBooking(id);
       setBookings((prev) => prev.filter((b) => b.id !== id));
+      await fetchOverview(); // ✅ تحديث الـ KPI cards والـ pie chart بعد الحذف
     } catch (err) {
       alert("Cannot delete booking: " + err.message);
     }
@@ -369,7 +368,7 @@ export function AdminDashboard() {
       u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Pie chart data derived from live bookings state
+  // Pie chart مبنية على live bookings state — تتحدث تلقائياً مع setBookings
   const pieData = [
     { name: "Confirmed", value: bookings.filter((b) => b.status === "confirmed").length },
     { name: "Pending",   value: bookings.filter((b) => b.status === "pending").length },
