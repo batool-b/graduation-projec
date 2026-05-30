@@ -15,6 +15,7 @@ import { TripDetails } from './pages/TripDetails';
 import { Booking } from './pages/Booking';
 import { BookingSuccess } from './pages/BookingSuccess';
 import { AdminDashboard } from './pages/AdminDashboard';
+import AIRecommendationsPage from './pages/AIRecommendationsPage';
 import { useAuth } from './context/AuthContext'; // ✅ أضف هاد
 
 // ✅ أضف هاد الـ component — يحمي صفحة الأدمن
@@ -43,6 +44,7 @@ function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="contact" element={<Contact />} />
         <Route path="change-password" element={<ChangePassword />} />
+        <Route path="ai-recommendations" element={<AIRecommendationsPage />} />
 
         {/* ✅ صفحة الأدمن محمية — بس الأدمن يقدر يدخلها */}
         <Route path="admin" element={
