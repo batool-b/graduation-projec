@@ -16,10 +16,10 @@ export const createMessage = async (req, res) => {
   try {
     const contact = await prisma.contact_messages.create({
       data: {
-        message_name: name,   // اسم الحقل بالـ schema هو message_name
+        message_name: name,
         email,
         subject,
-        message,              // تأكد إنك أضفت هذا الحقل بالـ schema (خطوة لازمة - راجع الملاحظة)
+        message,
         created_at: new Date(),
       },
     });
@@ -33,20 +33,7 @@ export const createMessage = async (req, res) => {
   }
 };
 
-// GET /api/contact  (admin only — اختياري)
-export const getMessages = async (req, res) => {
-  try {
-    const messages = await prisma.contact_messages.findMany({
-      orderBy: { created_at: "desc" },
-    });
-    res.json(messages);
-  } catch (err) {
-    console.error("createMessage error:", err);
-    res.status(500).json({ error: "Failed to send message. Please try again." });
-  }
-};
-
-// GET /api/contact
+// GET /api/contact (admin only)
 export const getMessages = async (req, res) => {
   try {
     const messages = await prisma.$queryRaw`
